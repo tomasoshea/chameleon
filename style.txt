@@ -1,0 +1,42 @@
+figure.titlesize: 18
+figure.figsize: 16, 9
+figure.dpi: 120
+
+axes.titlesize: 20
+axes.labelsize: 20
+axes.prop_cycle : (cycler('color', ['bc80bd' ,'fb8072', 'b3de69','fdb462','fccde5','8dd3c7','ffed6f','bebada','80b1d3', 'ccebc5', 'd9d9d9']))
+axes.titlelocation: left
+axes.autolimit_mode: round_numbers
+axes.labelcolor: black
+axes.edgecolor: black
+axes.linewidth: 1.0
+axes.spines.right : True
+axes.spines.top : True
+axes.grid: False
+
+xtick.labelsize: 17
+xtick.major.size: 10
+xtick.major.width: 2
+xtick.minor.size: 5
+xtick.minor.width: 1
+ytick.labelsize: 17
+ytick.major.size: 10
+ytick.major.width: 2
+ytick.minor.size: 5
+ytick.minor.width: 1
+
+lines.markeredgecolor: black
+lines.linewidth: 3
+
+legend.title_fontsize: 20
+legend.frameon: True
+legend.framealpha: 0.8
+legend.fontsize: 17
+legend.edgecolor: 0.9
+legend.borderpad: 0.2
+legend.columnspacing: 1.5
+legend.labelspacing:  0.4
+
+text.usetex: False
+
+font.size: 20
