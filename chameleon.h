@@ -16,8 +16,9 @@ using namespace std;
 // constants
 double pi = 3.14159265358979323846;	// pi
 double m_e = 510998.950;		// m_e [eV]
+double m_p = 938272088;	// m_p [eV]
 double a = (1. / 137.);		// alpha
-double mpl = 2e27;   // planck mass [eV]
+double mpl = 1.2e29;   // planck mass [eV]
 
 // solar params
 double R_raw = 149.5978707e9;	// mean earth-sun distance [m]
@@ -183,6 +184,24 @@ void merge( string name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// complex sqrt of (a + ib)
+void csqrt( double a, double b, double a0, double b0, double* pointa, double* pointb ) {
+
+	double x = a0;
+	double y = b0;
+	int n = 0;
+
+	while( n < 10 ) {
+		x = 0.5 * ( x + (a*x + b*y) / ( pow(x,2) + pow(y,2) ) );
+		y = 0.5 * ( y + (b*x - a*y) / ( pow(x,2) + pow(y,2) ) );
+		n++;
+	}
+
+	*pointa = x;
+	*pointb = y;
+}
+
+
 // B field in solar radiative zone [T]
 double radiativeZone( double r ) {
 
@@ -213,24 +232,29 @@ double meff( double Bm, double n, double rho, double wp ){
 	// set constants
 	//double Bg = pow(10,10.29);
 	double B = 30 * 2e2;	// 30 T in eV2
-	double Bg = mpl / ( pow(10,5.8) * 1e9 );
-	Bm = pow(10,7.09218);
+	double Bg = pow(10,8);
+	Bm = pow(10,6);
 	n = 8.7;
-	rho = 0.2 * 4e-18 * 1e36;
 
 	// add EM cpt to rho
 	//cout << "rho1: " << rho << endl;
 	rho += ( (Bg / Bm) * (B * B / 2) );
 	//cout << "rho2: " << rho << endl;
+	double wp2 = 4*pi*a*rho/(m_e*m_p);
+	//cout << "plasma freq part: " << pow(wp,2) / rho << endl;
+
+	//cout << "density part: " << ((n+1)/mpl)*pow( rho/(n*mpl*pow(L,n+4)) , 1/(n+1)) << endl;
 
 
     // compute omega_rho^2
     double wd = ( (n+1) * rho / mpl ) * pow( rho / (n * mpl * pow( L, (n+4) ) ) , ( 1 / (n+1) ) );
     //cout<<wd<<endl;
+	//cout << pow(wp,2) << endl;
 
     // compute m_eff^2
-    double item = ( pow( Bm, (n+2)/(n+1) ) * wd );// - pow(wp,2);
+    double item = pow( Bm, (n+2)/(n+1) ) * wd - pow(wp,2);
 
+	//return item;
     return sqrt(item);
 }
 
@@ -282,7 +306,7 @@ void plotMeff( double n ) {
 	
     // read in solar params
 	vector<double> r = read("data/rFrac.dat");	// sun radial distance [eV-1]
-	vector<double> rho = read("data/rho.dat");	// electron number density [eV3]
+	vector<double> rho = read("data/rho.dat");	// density [eV3]
 	vector<double> wp = read("data/wp.dat");	// plasma frequency [eV]
 
     // set Bm
@@ -296,8 +320,8 @@ void plotMeff( double n ) {
 	for ( int c = 0; c < len; c++ ) {
 
 		// restrict to tachocline
-		if( r[c] < 0.6 ) { continue; }
-		else if( r[c] > 0.8 ) { continue; }
+		///if( r[c] < 0.6 ) { continue; }
+		//else if( r[c] > 0.8 ) { continue; }
 
 		// compute meff for each value of r
 		double m = meff(Bm, n, rho[c], wp[c]);

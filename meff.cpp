@@ -11,7 +11,7 @@ int main(){
 	//for( double Bm = 1e0 ; Bm < 2e6 ; Bm *= 10 ) { plotMeff( Bm ); }
 	//for( double n = 1 ; n < 5 ; n += 1. ) { plotMeff( n ); }
 
-	plotMeff(1.);
+	plotMeff(4.);
 	
 	return(0);
 }

@@ -32,6 +32,7 @@ rFrac, T, rho, H1, He4, He3, C12, C13, N14, N15, O16, O17, O18, Ne, Na, Mg, Al, 
 # convert values to eV
 T = T * K2eV	# temp from K to eV
 rho = rho * 1e3 * pw(m2eV, 3) * kg2eV	# density from g cm-3 to eV4
+print(rho)
 rReal = rFrac * Rsun / m2eV	# radial distance from m to eV-1
 
 
