@@ -6,11 +6,19 @@
 
 using namespace std;
 
-int main(){
+int main( int argc, char** argv ){
 
-    double a,b;
-    csqrt(0,-200,1,1,&a,&b);
-    cout << a << " + " << b << "i" << endl;
-    
-	return(0);
+ //   if ( argc == 3 ) {
+        //double x = argv[1];
+       // double y = argv[2];
+       double x = 0;
+       double y = -8;
+        double a,b;
+        csqrt(x,y,&a,&b);
+        cout << a << " + " << b << "i" << endl;
+
+        return 0;
+ //   }
+
+ //   else { cout << "invalid usage! (length " << argc << ")\nusage: " << argv[0] << " <real part> <imaginary part>" << endl; return 69;}
 }

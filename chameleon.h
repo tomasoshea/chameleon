@@ -31,6 +31,8 @@ double r1 = 0.732;	// [R0]
 double d1 = 0.02;	// [R0]
 double r2 = 0.96;	// [R0]
 double d2 = 0.035;	// [R0]
+double mfp_raw = 0.1;	// approximate photon tachocline mean free path [m]
+
 
 // conversion factors
 double s2eV = (6.582119569e-16);	// Hz to eV
@@ -42,13 +44,14 @@ double kg2eV = 5.609588604e35;	// from hbar/c2
 // converted values
 double R = R_raw / m2eV;	// eV-1
 double rSolar = rSolar_raw / m2eV;	// eV-1
+double mfp = mfp_raw / m2eV;	// eV-1
 
 // utility constants
 double wRange = 1e3;	// range of w integral
 
 // model params
 //double n = 1;  // n=4 chameleon
-double L = 1e-3;    // Lambda [eV]
+double L = 0.1e-3;    // Lambda [eV]
 double Bm = 1e6;	// matter mixing
 
 
@@ -184,21 +187,33 @@ void merge( string name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// complex sqrt of (a + ib)
-void csqrt( double a, double b, double a0, double b0, double* pointa, double* pointb ) {
+// complex sqrt of (a + ib), starting points a0, b0 and results stored at pointa, pointb
+void csqrt( double a, double b, double* pointa, double* pointb ) {
 
-	double x = a0;
-	double y = b0;
+	double x,y;
+	double e = 1;
+	if( a == 0 ) { x = 1; }
+	else if ( a == 1 ) { x = 0.5; }
+	else{ x = sqrt( abs(a) ); }
+	if( b == 0 ) { y = 1; }
+	else if ( b == 1 ) { y = 0.5; }
+	else{ y = sqrt( abs(b) ); }
 	int n = 0;
+	double TOL = 1e-20;
 
-	while( n < 10 ) {
+	while( e > TOL ) {
+
+		e = abs(  0.5 * ( x + (a*x + b*y) / ( pow(x,2) + pow(y,2) ) ) - x );
+		//cout << e << endl;
 		x = 0.5 * ( x + (a*x + b*y) / ( pow(x,2) + pow(y,2) ) );
 		y = 0.5 * ( y + (b*x - a*y) / ( pow(x,2) + pow(y,2) ) );
 		n++;
 	}
 
-	*pointa = x;
-	*pointb = y;
+	if( abs(x) < TOL ) { *pointa = 0; }
+	else{ *pointa = x; }
+	if( abs(y) < TOL ) { *pointb = 0; }
+	else{ *pointb = y; }
 }
 
 
@@ -233,8 +248,8 @@ double meff( double Bm, double n, double rho, double wp ){
 	//double Bg = pow(10,10.29);
 	double B = 30 * 2e2;	// 30 T in eV2
 	double Bg = pow(10,8);
-	Bm = pow(10,6);
-	n = 8.7;
+	Bm = pow(10,8);
+	n = 4;
 
 	// add EM cpt to rho
 	//cout << "rho1: " << rho << endl;
@@ -254,8 +269,8 @@ double meff( double Bm, double n, double rho, double wp ){
     // compute m_eff^2
     double item = pow( Bm, (n+2)/(n+1) ) * wd - pow(wp,2);
 
-	//return item;
-    return sqrt(item);
+	return item;
+    //return sqrt(item);
 }
 
 // CAST prob p
@@ -297,6 +312,62 @@ double Pcham( double w, double n, double rho, double wp ){
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////// IAXO FLUX ////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// integrate over solar radius and E range
+void integral( double Bm, double n, vector<double> rho, vector<double> wp, 
+				vector<double> r, double* address ) {
+	
+	double len = r.size();
+	double item = 0;
+
+	// E integral
+	for( double w = 1e3, w < 1e5, w = w + 1e3 ) {
+	// solar radius integral
+	for ( int c = 0, c < len, c++ ){
+
+		double x = r[c] / rSolar;
+
+		if ( x < (r1 - d1) or x > (r1 + d1) ) { continue; }
+
+		double lw = 4 * w / meff( Bm, n, rho[c], wp[c] );
+		double B = tachocline( x, r1, d1, B1 ) * 2e-16;	// eV2
+		double temp = pow(x*B,2) * pow(lw,1.5) / mfp;
+		item += temp;
+	}
+	}
+	
+	*address = item;
+}
+
+// calculate and output limits
+void chameleon( double n, vector<double> rho, vector<double> wp, vector<double> r,
+				double Biaxo, double L, double phi, string name ) {
+
+	// define vectors
+	vector<double> vecBg vecBm;
+
+	// set path for writeout
+	string path = "data/limits/";
+	string ext = ".dat";
+
+	// calculate for various Bm values
+	for ( double Bm = 1e0, Bm < 1e6, Bm *= 2 ) {
+
+		double* I;
+		integral( Bm, n, hro, wp, r, I );
+		double J = (*I) * C * pow(rSolar,3) * pow(L*Biaxo/R,2) * pow(2*mpl,-4);
+		vecBg.push_back( pow(phi/J, 0.25) );
+		vecBm.push_back( Bm );
+	}
+
+	write2D( path + name + ext, vegBm, vecBg );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////// SPECTRA ETC ///////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -320,7 +391,7 @@ void plotMeff( double n ) {
 	for ( int c = 0; c < len; c++ ) {
 
 		// restrict to tachocline
-		///if( r[c] < 0.6 ) { continue; }
+		//if( r[c] < 0.6 ) { continue; }
 		//else if( r[c] > 0.8 ) { continue; }
 
 		// compute meff for each value of r

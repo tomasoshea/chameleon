@@ -1,0 +1,15 @@
+# ignore all .outs
+*.out
+
+# ignore pycache files
+*.pyc
+
+# ignore VS code shite for windows stuff
+.vscode\*
+.vscode/*
+*.json
+
+# ignore presentation
+*.pptx
+*.ppt
+*.odt
