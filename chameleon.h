@@ -18,7 +18,7 @@ double pi = 3.14159265358979323846;	// pi
 double m_e = 510998.950;		// m_e [eV]
 double m_p = 938272088;	// m_p [eV]
 double a = (1. / 137.);		// alpha
-double mpl = 1.2e29;   // planck mass [eV]
+double mpl = 2.4e27;   // planck mass [eV]
 
 // solar params
 double R_raw = 149.5978707e9;	// mean earth-sun distance [m]
