@@ -14,6 +14,9 @@
 using namespace std;
 
 // physical constants
+double hbar = 6.582119569e-16;  // [eV s]
+double ls =  2.99792458e8;  // 1 lightsecond [m]
+double hbarc = hbar * ls;   // m2eV [eV m]
 double pi = 3.14159265358979323846;	// pi
 double m_e = 510998.950;		// m_e [eV]
 double m_p = 938272088;	// m_p [eV]
@@ -21,7 +24,7 @@ double a = (1. / 137.);		// alpha
 double mpl = 2e27;   // planck mass [eV]
 
 // conversion factors
-double s2eV = (6.582119569e-16);	// Hz to eV
+double s2eV = (6.582119569e-16);	// Hz to eV (hbar)
 double J2eV = (1. / 1.602176634e-19);	// Joules to eV (1 / e)
 double m2eV = (1.973269804e-7);	// m-1 to eV
 double K2eV = (8.617333262e-5);	// Kelvin to eV
@@ -30,29 +33,32 @@ double T2eV = 2e-16 * 1e18; // Tesla to eV2
 
 // other constants
 double z3 = 1.202056903159594;  // Riemann zeta(3) 
-double ls =  299792458 / m2eV;  // 1 lightsecond [eV-1]
-double Lam = 2.4e-3;    // cosmological constant [eV]
+double Lam = 1e-3;    // cosmological constant [eV] 2.4e-3
 
 // solar params
-double R = 149.5978707e9 / m2eV;	// mean earth-sun distance [eV-1]
-double rSolar = 6.9598E+10 / m2eV;	// solar radius [eV-1]
+double R = 149.5978707e9;	// mean earth-sun distance [m]
+double rSolar = 6.9598E+10;	// solar radius [m]
 double xt = 0.7;    //radial location of tachocline [frac]
 double Dx = 0.01;   // tachocline thickness [frac]
-double rt = xt * rSolar;   // radial location of tachocline [eV-1]
-double Dr = Dx * rSolar;  // tachocline thickness [eV-1]
-double Bt = 0.021 * 1e6;    // tachocline B-field [eV2]
+double rt = xt * rSolar;   // radial location of tachocline [m]
+double Dr = Dx * rSolar;  // tachocline thickness [m]
+double Bt = 30 * T2eV;    // tachocline B-field [eV2]
 double rho = 891921.86598 * 1e12; // tachocline density [eV4]
 double T = 0.1995759863 * 1e3;  // tachocline temperature [eV]
-double ne = 1.06051586e+23 * 1e6 / pow(m2eV,3); // e- number density [eV3]
-double mfp = 0.003 / m2eV;  // photon mean free path [eV-1]
-double ng = 1e21 * 1e4 * pow(m2eV,2) / s2eV;  // tachocline photon flux [eV]
-double wp2 = 4*pi*a*rho/(m_e*m_p); // plasma frequency [eV]
+double ne = 1.06051586e+23 * 1e6 * pow(m2eV,3); // e- number density [eV3]
+double mfp = 0.003;  // photon mean free path [m]
+double ng = 1e21 * 1e4;  // tachocline photon flux [m-2 s-1]
+double wp2 = 4*pi*a*ne/(m_e); // plasma frequency squared [eV2]
 
 // CAST params
-double L = 9.26 / m2eV; // CAST length [eV-1]
-double B = 9 * T2eV;    // CAST B-field [eV2]
-double phi = 1e-5 * 1e4 * 14.5 * pow(m2eV,2) / s2eV;   // CAST bg flux [eV]
+//double L = 9.26; // CAST length [m]
+//double B = 9 * T2eV;    // CAST B-field [eV2]
+//double phi = 0.12;   // CAST bg flux [m-2 s-1] (95% CL)
 
+// babyIAXO
+double L = 10;  // babyIAXO bore length [m]
+double B = 2 * T2eV;   // babyIAXO B-field [eV2]
+double phi = 2.89557e-06;   // babyIAXO bg flux [m-2 s-1] (95% CL)
 
 // write out 2 column datafile
 void write2D( string name, vector<double> data1, vector<double> data2) {
@@ -90,7 +96,7 @@ void write2D( string name, vector<double> data1, vector<double> data2) {
 }
 
 // coherence length [eV-1]
-double lw( double w, double n, double Bm ) {
+double lom( double w, double n, double Bm ) {
 
     // calculate chameleon mass squared [eV2]
     double wd2 = ( (n+1) * rho / mpl ) 
@@ -134,19 +140,23 @@ double wIntegral( double n, double Bm ) {
 }
 */
 
-// phi from dw integral
+
+// differential flux emitted from sun [m-2 s-1 eV-1]
+double solarFlux( double w, double n, double Bm ) {
+
+    double lw = lom(w,n,Bm);  // [eV-1]
+    return ng * pg(w) * (Dr / mfp) * pow( Bt * lw / mpl*2, 2 ) * sqrt(ls/lw*hbarc) * I(lw*hbarc/mfp);
+}
+
+
+// detector phi from dw integral [m-2 s-1]
 double wIntegral( double n, double Bm ) {
 
     // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
-    double dw = 1e1;
+    double dw = 1e0;
     double item = 0.;
-    for( double w = 5e2; w < 15e3; w+=dw) {
-
-        double l = lw(w,n,Bm);
-        double p1 = ng * pg(w) * pow(rSolar/R,2) * (Dr / mfp) * pow(Bt*l*B*L/(mpl*mpl),2) * sqrt(ls/l) * I(l/mfp);
-        l = lw(w+dw,n,Bm);
-        double p2 = ng * pg(w+dw) * pow(rSolar/R,2) * (Dr / mfp) * pow(Bt*l*B*L/(mpl*mpl),2) * sqrt(ls/l) * I(l/mfp);
-        item += ( dw * (p1+p2) / 2 );
+    for( double w = 5e2; w < 15e3; w+=dw) {     // omega in eV
+        item += ( dw * pow(rt/R,2) * pow(B*(L/hbarc)/(2*mpl),2) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
     }
 
     return item;
@@ -156,19 +166,19 @@ double wIntegral( double n, double Bm ) {
 int main(){
 
     // set model parameter n
-    double n = 4;
+    double n = 1;
     // initialise vectors
     vector<double> BgVec;
     vector<double> BmVec;
     // scan over various Bm
-    for ( double Bm = 1; Bm < 1e6; Bm*=2 ) {
+    for ( double Bm = 1e-4; Bm < 1e4; Bm*=2 ) {
 
         BgVec.push_back( pow( phi / wIntegral(n,Bm), 0.25) );
         BmVec.push_back(Bm);
     }
 
 	// set path for writeout
-	string path = "data/limits/CAST-n";
+	string path = "data/limits/babyIAXO-n";
 	string ext = ".dat";
 	write2D( path + to_string((int)n) + ext, BmVec, BgVec );
 
