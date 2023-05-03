@@ -95,15 +95,33 @@ void write2D( string name, vector<double> data1, vector<double> data2) {
 	
 }
 
-// coherence length [eV-1]
-double lom( double w, double n, double Bm ) {
-
+// chameleon mass squared
+double mCham( double w, double n, double Bm ){
     // calculate chameleon mass squared [eV2]
     double wd2 = ( (n+1) * rho / mpl ) 
     * pow( rho / (n * mpl * pow( Lam, (n+4) ) ) , ( 1 / (n+1) ) );
 
     double m2 = pow( Bm, (n+2)/(n+1) ) * wd2;
+
+    return m2;
+}
+
+// symmetron mass squared (for high density approx) [eV2]
+double mSym( double Bm ){
+    return Bm * rho / pow(mpl,2);
+}
+
+// density dependant dilaton (Brax) for negligible Vc [eV2]
+double mDil( double Bm ){
+    return Bm * rho / pow(mpl,2);
+}
+
+// coherence length [eV-1]
+double lom( double w, double n, double Bm ) {
     
+    // get m2 from corresponding theory
+    double m2 = mDil( Bm );
+
     // calculate coherence length (pos def)
     double item = 4 * w / sqrt( pow( m2 - wp2, 2 ));
     return item;
@@ -171,7 +189,7 @@ int main(){
     vector<double> BgVec;
     vector<double> BmVec;
     // scan over various Bm
-    for ( double Bm = 1e-4; Bm < 1e4; Bm*=2 ) {
+    for ( double Bm = 1e-10; Bm < 1e40; Bm*=2 ) {
 
         BgVec.push_back( pow( phi / wIntegral(n,Bm), 0.25) );
         BmVec.push_back(Bm);
@@ -179,8 +197,8 @@ int main(){
 
 	// set path for writeout
 	string path = "data/limits/babyIAXO-n";
-	string ext = ".dat";
-	write2D( path + to_string((int)n) + ext, BmVec, BgVec );
-
+	string ext = "-dil.dat";
+	//write2D( path + to_string((int)n) + ext, BmVec, BgVec );
+    write2D( path + ext, BmVec, BgVec );
     return 0;
 }
