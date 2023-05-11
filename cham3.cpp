@@ -123,7 +123,7 @@ double pg( double w, double T ) {
 }
 
 
-// differential flux emitted from sun [m-2 s-1 eV-1]
+// differential flux at a given solar radius [m-3 s-1 eV-1]
 double solarFlux( double w, double n, double Bm, double rho, double wp ) {
 
     double lw = lom( w, n, Bm, rho, wp );  // [eV-1]
@@ -133,13 +133,14 @@ double solarFlux( double w, double n, double Bm, double rho, double wp ) {
 
 
 // detector phi from dw integral [m-2 s-1]
-double wIntegral( double n, double Bm ) {
+double wIntegral( double n, double Bm, double rho, double wp ) {
 
     // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
     double dw = 1e0;
     double item = 0.;
-    for( double w = 5e2; w < 15e3; w+=dw) {     // omega in eV
-        item += ( dw * pow(rt/R,2) * pow(B*(L/hbarc)/(2*mpl),2) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
+    for( double w = 1e2; w < 1e4; w+=dw) {     // omega in eV
+        item += ( dw * pow(rt/R,2) * pow(B*(L/hbarc)/(2*mpl),2)
+             * (solarFlux( w+dw, n, Bm, rho, wp ) + solarFlux( w, n, Bm, rho, wp )) / 2 );
     }
 
     return item;
@@ -159,6 +160,9 @@ int main(){
 	vector<vector<double>> z1 = readGaunt("data/Z1.dat");	// gaunt factors for Z=1
 	vector<vector<double>> z2 = readGaunt("data/Z2.dat");	// gaunt factors for Z=2
 
+	// convert Gaunt factor Theta to T in eV
+	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * m_e; }
+	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * m_e; }
 
     // set model parameter n
     double n = 1;

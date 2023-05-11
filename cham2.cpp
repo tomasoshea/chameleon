@@ -58,7 +58,7 @@ double wp2 = 4*pi*a*ne/(m_e); // plasma frequency squared [eV2]
 // babyIAXO
 double L = 10;  // babyIAXO bore length [m]
 double B = 2 * T2eV;   // babyIAXO B-field [eV2]
-double phi = 2.89557e-06;   // babyIAXO bg flux [m-2 s-1] (95% CL)
+double phi = 3.921e-06;   // babyIAXO bg flux [m-2 s-1] (95% CL)
 
 // write out 2 column datafile
 void write2D( string name, vector<double> data1, vector<double> data2) {
@@ -173,7 +173,7 @@ double wIntegral( double n, double Bm ) {
     // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
     double dw = 1e0;
     double item = 0.;
-    for( double w = 5e2; w < 15e3; w+=dw) {     // omega in eV
+    for( double w = 1e2; w < 1e4; w+=dw) {     // omega in eV
         item += ( dw * pow(rt/R,2) * pow(B*(L/hbarc)/(2*mpl),2) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
     }
 
@@ -184,7 +184,7 @@ double wIntegral( double n, double Bm ) {
 int main(){
 
     // set model parameter n
-    double n = 10;
+    double n = 1;
     // initialise vectors
     vector<double> BgVec;
     vector<double> BmVec;
