@@ -375,13 +375,13 @@ void chameleon( double n, vector<double> rho, vector<double> wp, vector<double> 
 // function to output E spectrum for T-plasmon
 void plotMeff( double n ) {
 	
-    // read in solar params
+	// read in solar params
 	vector<double> r = read("data/rFrac.dat");	// sun radial distance [eV-1]
 	vector<double> rho = read("data/rho.dat");	// density [eV3]
 	vector<double> wp = read("data/wp.dat");	// plasma frequency [eV]
 
-    // set Bm
-    //double Bm = 1e6;
+	// set Bm
+	//double Bm = 1e6;
 
     // set up vectors
     vector<double> rvec;

@@ -1,6 +1,5 @@
 // Tom O'Shea 2023
-// simple script to find chameleon limits for CAST just from tachocline
-// some values taken from https://github.com/lucavisinelli/XENONCHAM/blob/main/code/ChameleonFlux.py
+// script to find chameleon limits for IAXO over whole sun
 
 #include <iostream>
 #include <fstream>
