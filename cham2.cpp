@@ -55,10 +55,6 @@ double wp2 = 4*pi*a*ne/(m_e); // plasma frequency squared [eV2]
 //double B = 9 * T2eV;    // CAST B-field [eV2]
 //double phi = 0.12;   // CAST bg flux [m-2 s-1] (95% CL)
 
-// babyIAXO
-double L = 10;  // babyIAXO bore length [m]
-double B = 2 * T2eV;   // babyIAXO B-field [eV2]
-double phi = 3.921e-06;   // babyIAXO bg flux [m-2 s-1] (95% CL)
 
 // write out 2 column datafile
 void write2D( string name, vector<double> data1, vector<double> data2) {
@@ -168,7 +164,7 @@ double solarFlux( double w, double n, double Bm ) {
 
 
 // detector phi from dw integral [m-2 s-1]
-double wIntegral( double n, double Bm ) {
+double wIntegral( double n, double Bm, double L, double B ) {
 
     // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
     double dw = 1e0;
@@ -181,25 +177,50 @@ double wIntegral( double n, double Bm ) {
 }
 
 // calculate limits
-int main(){
-
-    // set model parameter n
-    double n = 1;
+void calc ( double n, double L, double B, string detector ) {
+    
     // initialise vectors
     vector<double> BgVec;
     vector<double> BmVec;
     // scan over various Bm
     for ( double Bm = 1e-10; Bm < 1e6; Bm*=2 ) {
 
-        BgVec.push_back( pow( phi / wIntegral(n,Bm), 0.25) );
+        //BgVec.push_back( pow( phi / wIntegral(n,Bm), 0.25) );
+        BgVec.push_back(wIntegral(n, Bm, L, B));   // output coupling=1 flux
         BmVec.push_back(Bm);
     }
 
 	// set path for writeout
-	string path = "data/limits/babyIAXO";
-	string ext = "-cham.dat";
+	string path = "data/limits/" + detector;
+	string ext = "-cham-flux.dat";
 	write2D( path + to_string((int)n) + ext, BmVec, BgVec );
-    //write2D( path + ext, BmVec, BgVec );
+}
+
+
+int main(){
+
+    // set model parameter n
+    double n = 1;
+
+    // run over each
+
+    // babyIAXO
+    double L = 10;  // babyIAXO bore length [m]
+    double B = 2 * T2eV;   // babyIAXO B-field [eV2]
+    thread t1(calc, n, L, B, "babyIAXO");
+
+    // baseline IAXO
+    L = 2.5; B = 20;
+    thread t2(calc, n, L, B, "baselineIAXO");
+
+    // upgraded IAXO
+    L = 3.5; B = 22;
+    thread t3(calc, n, L, B, "upgradedIAXO");
+
+    t1.join();
+    t2.join();
+    t3.join();
+
     return 0;
 }
 
