@@ -11,6 +11,8 @@ double CL = 0.95;	// confidence level
 double dE = 10;	// E range [keV]
 int samplesize = 1e3;		// size of random sample
 
+string n = "10"; // model parameter
+
 // conversion factors
 double s2eV = (6.582119569e-16);	// Hz to eV
 double J2eV = (1. / 1.602176634e-19);	// Joules to eV (1 / e)
@@ -156,7 +158,7 @@ void chis( int detector ) {
 
 	if ( detector==0 ) {
 		// babyIAXO parameters
-		name="babyIAXO";
+		name="babyIAXO" + n;
 		A = 0.77;	// detector area [m2]
 		phiBg = 1e-7 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 0.6 * 1e-4;	// XRay detection area [m2]
@@ -164,14 +166,15 @@ void chis( int detector ) {
 		effD = 0.7;	// detectior efficiency
 		effO = 0.35;	// optical efficiency
 		effT = 0.5;	// time efficiency (proportion pointed at sun)
-		m = loadtxt("data/limits/babyIAXO1-cham-flux.dat",0);
-		flux = loadtxt("data/limits/babyIAXO1-cham-flux.dat",1);
+		string load = "data/limits/babyIAXO" + n + "-cham-flux.dat";
+		m = loadtxt(load,0);
+		flux = loadtxt(load,1);
 		len = flux.size();
 		}
 
 	else if ( detector==1 ) {
 		// baseline IAXO parameters
-		name="baselineIAXO";
+		name="baselineIAXO" + n;
 		A = 2.3;	// detector area [m2]
 		phiBg = 1e-8 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -179,14 +182,15 @@ void chis( int detector ) {
 		effD = 0.8;	// detectior efficiency
 		effO = 0.7;	// optical efficiency
 		effT = 0.5;	// time efficiency (proportion pointed at sun)
-		m = loadtxt("data/limits/baselineIAXO1-cham-flux.dat",0);
-		flux = loadtxt("data/limits/baselineIAXO1-cham-flux.dat",1);
+		string load = "data/limits/baselineIAXO" + n +"-cham-flux.dat";
+		m = loadtxt(load,0);
+		flux = loadtxt(load,1);
 		len = flux.size();
 		}
 
 	else if ( detector==2 ) {
 		// upgraded IAXO parameters
-		name="upgradedIAXO";
+		name="upgradedIAXO" + n;
 		A = 3.9;	// detector area [m2]
 		phiBg = 1e-9 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -194,8 +198,9 @@ void chis( int detector ) {
 		effD = 0.8;	// detectior efficiency
 		effO = 0.7;	// optical efficiency
 		effT = 0.5;	// time efficiency (proportion pointed at sun)
-		m = loadtxt("data/limits/upgradedIAXO1-cham-flux.dat",0);
-		flux = loadtxt("data/limits/upgradedIAXO1-cham-flux.dat",1);
+		string load = "data/limits/upgradedIAXO" + n + "-cham-flux.dat";
+		m = loadtxt(load,0);
+		flux = loadtxt(load,1);
 		len = flux.size();
 		}
 

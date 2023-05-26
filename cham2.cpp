@@ -200,7 +200,7 @@ void calc ( double n, double L, double B, string detector ) {
 int main(){
 
     // set model parameter n
-    double n = 1;
+    double n = 10;
 
     // run over each
 
