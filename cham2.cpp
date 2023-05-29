@@ -33,7 +33,7 @@ double T2eV = 2e-16 * 1e18; // Tesla to eV2
 
 // other constants
 double z3 = 1.202056903159594;  // Riemann zeta(3) 
-double Lam = 1e-3;    // cosmological constant [eV] 2.4e-3
+double Lam = 2.4e-3;    // cosmological constant [eV] 2.4e-3
 
 // solar params
 double R = 149.5978707e9;	// mean earth-sun distance [m]
@@ -116,7 +116,8 @@ double mDil( double Bm ){
 double lom( double w, double n, double Bm ) {
     
     // get m2 from corresponding theory
-    double m2 = mCham( w, n, Bm );
+    //double m2 = mCham( w, n, Bm );
+    double m2 = mSym( Bm );
 
     // calculate coherence length (pos def)
     double item = 4 * w / sqrt( pow( m2 - wp2, 2 ));
@@ -132,27 +133,6 @@ double I( double a ) {
 double pg( double w ) {
     return pow(w,2) / ( ( 2 * z3 * pow(T,3) ) * ( exp(w/T) - 1 ) );
 }
-
-/*
-// phi from dw integral
-double wIntegral( double n, double Bm ) {
-
-    // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
-    double dw = 1e1;
-    double item = 0.;
-    for( double w = 5e2; w < 15e3; w+=dw) {
-
-        double l = lw(w,n,Bm);
-        double p1 = ng * pg(w) * sqrt(ls/l) * pow(rSolar,3) * pow( B * Bt * l * xt / ( 4 * mpl*mpl * R ), 2 ) * Dx * I(l/mfp) / mfp;
-        l = lw(w+dw,n,Bm);
-        double p2 = ng * pg(w+dw) * sqrt(ls/l) * pow(rSolar,3) * pow( B * Bt * l * xt / ( 4 * mpl*mpl * R ), 2 ) * Dx * I(l/mfp) / mfp;
-
-        item += ( dw * (p1+p2) / 2 );
-    }
-
-    return item;
-}
-*/
 
 
 // differential flux emitted from sun [m-2 s-1 eV-1]
@@ -183,7 +163,7 @@ void calc ( double n, double L, double B, string detector ) {
     vector<double> BgVec;
     vector<double> BmVec;
     // scan over various Bm
-    for ( double Bm = 1e-10; Bm < 1e6; Bm*=2 ) {
+    for ( double Bm = 1e0; Bm < 1e6; Bm*=1.1 ) {
 
         //BgVec.push_back( pow( phi / wIntegral(n,Bm), 0.25) );
         BgVec.push_back(wIntegral(n, Bm, L, B));   // output coupling=1 flux
@@ -192,8 +172,9 @@ void calc ( double n, double L, double B, string detector ) {
 
 	// set path for writeout
 	string path = "data/limits/" + detector;
-	string ext = "-cham-flux.dat";
-	write2D( path + to_string((int)n) + ext, BmVec, BgVec );
+	string ext = "-sym-flux.dat";
+	//write2D( path + to_string((int)n) + ext, BmVec, BgVec );
+    write2D( path + ext, BmVec, BgVec );
 }
 
 
@@ -210,11 +191,13 @@ int main(){
     thread t1(calc, n, L, B, "babyIAXO");
 
     // baseline IAXO
-    L = 2.5; B = 20;
+    L = 20;
+    B = 2.5 * T2eV;
     thread t2(calc, n, L, B, "baselineIAXO");
 
     // upgraded IAXO
-    L = 3.5; B = 22;
+    L = 22;
+    B = 3.5 * T2eV;
     thread t3(calc, n, L, B, "upgradedIAXO");
 
     t1.join();

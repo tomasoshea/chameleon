@@ -153,12 +153,14 @@ void chis( int detector ) {
 	double A, phiBg, a, t, effD, effO, effT, len;
 	string name;
 	vector<double> flux, m;
+	string ext = "-sym-flux.dat";
+	string path = "data/limits/";
 
 	// choose detector
 
 	if ( detector==0 ) {
 		// babyIAXO parameters
-		name="babyIAXO" + n;
+		name="babyIAXO";// + n;
 		A = 0.77;	// detector area [m2]
 		phiBg = 1e-7 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 0.6 * 1e-4;	// XRay detection area [m2]
@@ -166,7 +168,7 @@ void chis( int detector ) {
 		effD = 0.7;	// detectior efficiency
 		effO = 0.35;	// optical efficiency
 		effT = 0.5;	// time efficiency (proportion pointed at sun)
-		string load = "data/limits/babyIAXO" + n + "-cham-flux.dat";
+		string load = path + name + ext;
 		m = loadtxt(load,0);
 		flux = loadtxt(load,1);
 		len = flux.size();
@@ -174,7 +176,7 @@ void chis( int detector ) {
 
 	else if ( detector==1 ) {
 		// baseline IAXO parameters
-		name="baselineIAXO" + n;
+		name="baselineIAXO";// + n;
 		A = 2.3;	// detector area [m2]
 		phiBg = 1e-8 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -182,7 +184,7 @@ void chis( int detector ) {
 		effD = 0.8;	// detectior efficiency
 		effO = 0.7;	// optical efficiency
 		effT = 0.5;	// time efficiency (proportion pointed at sun)
-		string load = "data/limits/baselineIAXO" + n +"-cham-flux.dat";
+		string load = path + name + ext;
 		m = loadtxt(load,0);
 		flux = loadtxt(load,1);
 		len = flux.size();
@@ -190,7 +192,7 @@ void chis( int detector ) {
 
 	else if ( detector==2 ) {
 		// upgraded IAXO parameters
-		name="upgradedIAXO" + n;
+		name="upgradedIAXO";// + n;
 		A = 3.9;	// detector area [m2]
 		phiBg = 1e-9 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -198,7 +200,7 @@ void chis( int detector ) {
 		effD = 0.8;	// detectior efficiency
 		effO = 0.7;	// optical efficiency
 		effT = 0.5;	// time efficiency (proportion pointed at sun)
-		string load = "data/limits/upgradedIAXO" + n + "-cham-flux.dat";
+		string load = path + name + ext;
 		m = loadtxt(load,0);
 		flux = loadtxt(load,1);
 		len = flux.size();
@@ -236,7 +238,7 @@ void chis( int detector ) {
 	
 	//cout << "chi length: " << chi.size() << "	m length: " << m.size() << endl;
 	// write out
-	string savename = "data/limits/chamstats-" + name + "-tPlasmon.dat";
+	string savename = "data/limits/symstats-" + name + "-tPlasmon.dat";
 	write2D( savename, m, chi );
 }
 
