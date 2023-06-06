@@ -25,17 +25,19 @@ ax2.set(xlim=(1e0, 1e6), ylim=(1e8, 1e11))
 # add IAXO bits
 path = "data/limits/chamstats"
 
-dat = loadtxt("{}-babyIAXO10-tPlasmon.dat".format(path))
-ax2.plot(dat[:,0],dat[:,1], color='magenta', label='babyIAXO')
-print("babyIAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+# loop over n values
+for n in range(1,10):
+	dat = loadtxt("{}-babyIAXO{}-tPlasmon.dat".format(path, n))
+	ax2.plot(dat[:,0],dat[:,1], color='magenta', label='n = {}'.format(n))
+	print("babyIAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-dat = loadtxt("{}-baselineIAXO10-tPlasmon.dat".format(path))
-ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
-print("baseline IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
-
-dat = loadtxt("{}-upgradedIAXO10-tPlasmon.dat".format(path))
-ax2.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
-print("upgraded IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+#dat = loadtxt("{}-baselineIAXO10-tPlasmon.dat".format(path))
+#ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
+#print("baseline IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+#
+#dat = loadtxt("{}-upgradedIAXO10-tPlasmon.dat".format(path))
+#ax2.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
+#print("upgraded IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
 # add cast
 ax2.hlines(5.74e10, 1e0, 1e6, color='black', ls=':', label='CAST')
@@ -53,5 +55,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/chamLimits-n10.jpg')
+plt.savefig('plots/chamLimits-ns.jpg')
 plt.show()

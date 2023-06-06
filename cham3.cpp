@@ -326,9 +326,7 @@ double solarFlux( double w, double n, double Bm, vector<double> ne,
 		else if ( rFrac > (r2 - d2) and rFrac < (r2 + d2) ) {
 			B = tachocline( rFrac, r2, d2, B2 ); 
 			if ( B > 1e10 ) { cout << B << endl; } }	// [T]
-		cout<< B << endl;
-		
-		
+				
 		B *= T2eV;	// [eV2]
 
 		
@@ -396,10 +394,11 @@ int main(){
     // scan over various Bm
     for ( double Bm = 1e0; Bm < 1e6; Bm*=2 ) {
 
-        BgVec.push_back( pow( phi / wIntegral(n, Bm, ne, rho, wp, r,
-									T, nH, nHe4, nHe3, z1, z2), 0.25) );
+		double Bg = pow( phi / wIntegral(n, Bm, ne, rho, wp, r,
+									T, nH, nHe4, nHe3, z1, z2), 0.25);
+        BgVec.push_back( Bg );
         BmVec.push_back(Bm);
-		cout << log10((Bm+1)/1e6) << "\% complete..." << endl;
+		cout << "Bm = " << Bm << "	Bg = " << Bg << endl;
 	// << "\33[A\33[2K\r"
     }
 

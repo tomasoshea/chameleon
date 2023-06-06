@@ -9,7 +9,7 @@ int main() {
 
     // choose model params
     double n = 1;
-    double Bm = 1e5;
+    double Bm = 1e1;
 
     // initialise vectors
 	vector<double> flux, omega;
@@ -19,7 +19,7 @@ int main() {
 		//cout << "omega = " << w << endl;
 	}
 
-	write2D( "data/chamB5-spectrum.dat", omega, flux );
+	write2D( "data/chamB1-spectrum.dat", omega, flux );
 
 	return 0;
 }

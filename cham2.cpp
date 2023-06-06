@@ -104,24 +104,28 @@ double mCham( double w, double n, double Bm ){
 
 // symmetron mass squared (for high density approx) [eV2]
 double mSym( double Bm ){
-    return Bm * rho / pow(mpl,2);
+    return pow(Bm,2) * rho / pow(mpl,2);
 }
 
 // density dependant dilaton (Brax) for negligible Vc [eV2]
-double mDil( double Bm ){
-    return Bm * rho / pow(mpl,2);
-}
+//double mDil( double Bm ){
+//    return Bm * rho / pow(mpl,2);
+//}
 
 // coherence length [eV-1]
 double lom( double w, double n, double Bm ) {
     
     // get m2 from corresponding theory
-    //double m2 = mCham( w, n, Bm );
-    double m2 = mSym( Bm );
+    double m2 = mCham( w, n, Bm );
+    //double m2 = mSym( Bm );
 
-    // calculate coherence length (pos def)
-    double item = 4 * w / sqrt( pow( m2 - wp2, 2 ));
-    return item;
+    if( m2 > pow(w,2) ) { return 0; }
+    else{
+        // calculate coherence length (pos def)
+        double item = 4 * w / sqrt( pow( m2 - wp2, 2 ));
+        //double item = 4 * w / (m2 - wp2);
+        return item;
+    }
 }
 
 // function I(a)
@@ -139,7 +143,10 @@ double pg( double w ) {
 double solarFlux( double w, double n, double Bm ) {
 
     double lw = lom(w,n,Bm);  // [eV-1]
-    return ng * pg(w) * (Dr / mfp) * pow( Bt * lw / mpl*2, 2 ) * sqrt(ls/lw*hbarc) * I(lw*hbarc/mfp);
+    if( lw == 0 ) { return 0; }
+    else{
+        return ng * pg(w) * (Dr / mfp) * pow( Bt * lw / mpl*2, 2 ) * sqrt(ls/lw*hbarc) * I(lw*hbarc/mfp);
+    }
 }
 
 
@@ -150,11 +157,44 @@ double wIntegral( double n, double Bm, double L, double B ) {
     double dw = 1e0;
     double item = 0.;
     for( double w = 1e2; w < 1e4; w+=dw) {     // omega in eV
+        //cout << (4 * w / mSym(Bm)) / (L/hbarc) << endl;   // limits check
+        //cout << lom(w,n,Bm) * Bt / (2 * mpl) << endl;   // limits check
+
         item += ( dw * pow(rt/R,2) * pow(B*(L/hbarc)/(2*mpl),2) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
     }
 
     return item;
 }
+
+
+// full IAXO conversion prob
+double fullProb( double Bg, double w, double n, double Bm, double L, double B ) {
+
+    double m2 = mSym( Bm ); // symmetron mass
+    double lw = 4 * w / m2;   // coherence length in vacuum
+    double twoTheta = atan( Bg * B * lw / (2*mpl) );  // tan-1(tan(2theta))
+    //cout << twoTheta << endl;
+
+    if( twoTheta > 0.1 ) {
+        return pow( sin(twoTheta) * sin( L / ( lw * cos(twoTheta) ) ) , 2 );
+        }
+    else { return pow( Bg * Bt * lw / mpl*2, 2 ); }
+    
+}
+
+
+// detector phi from dw integral from full detector prob [m-2 s-1]
+double fullFlux( double Bg, double n, double Bm, double L, double B ) {
+
+    // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
+    double dw = 1e0;
+    double item = 0.;
+    for( double w = 1e2; w < 1e4; w+=dw) {     // omega in eV
+        item += ( pow(Bg,2) * dw * pow(rt/R,2) * fullProb(Bg,w,n,Bm,L,B) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
+    }
+    return item;
+}
+
 
 // calculate limits
 void calc ( double n, double L, double B, string detector ) {
@@ -163,48 +203,55 @@ void calc ( double n, double L, double B, string detector ) {
     vector<double> BgVec;
     vector<double> BmVec;
     // scan over various Bm
-    for ( double Bm = 1e0; Bm < 1e6; Bm*=1.1 ) {
+    for ( double Bm = 1e-10; Bm < 1e25; Bm*=1.01 ) {
 
+        double w = 1e2;
+        //cout << "Bm = " << Bm << "    tan2x = " << 1e10*(4 * w / mSym(Bm)) * Bt / (2 * mpl) << endl;   // limits check
         //BgVec.push_back( pow( phi / wIntegral(n,Bm), 0.25) );
-        BgVec.push_back(wIntegral(n, Bm, L, B));   // output coupling=1 flux
+        double flux = wIntegral(n, Bm, L, B);
+        BgVec.push_back(flux);   // output coupling=1 flux
         BmVec.push_back(Bm);
+        //cout << "Bm = " << Bm << "  flux = " << flux << endl;
     }
 
 	// set path for writeout
 	string path = "data/limits/" + detector;
-	string ext = "-sym-flux.dat";
-	//write2D( path + to_string((int)n) + ext, BmVec, BgVec );
-    write2D( path + ext, BmVec, BgVec );
+	string ext = "-cham-flux-test.dat";
+	write2D( path + to_string((int)n) + ext, BmVec, BgVec );
+    //write2D( path + ext, BmVec, BgVec );
 }
 
 
-int main(){
-
-    // set model parameter n
-    double n = 10;
-
-    // run over each
-
-    // babyIAXO
-    double L = 10;  // babyIAXO bore length [m]
-    double B = 2 * T2eV;   // babyIAXO B-field [eV2]
-    thread t1(calc, n, L, B, "babyIAXO");
-
-    // baseline IAXO
-    L = 20;
-    B = 2.5 * T2eV;
-    thread t2(calc, n, L, B, "baselineIAXO");
-
-    // upgraded IAXO
-    L = 22;
-    B = 3.5 * T2eV;
-    thread t3(calc, n, L, B, "upgradedIAXO");
-
-    t1.join();
-    t2.join();
-    t3.join();
-
-    return 0;
-}
+//int main(){
+//
+//    // set model parameter n
+//    double n = 1;
+//    //for( int n = 1; n <= 10; n++ ) {
+//
+//    // run over each
+//
+//    // babyIAXO
+//    double L = 10;  // babyIAXO bore length [m]
+//    double B = 2 * T2eV;   // babyIAXO B-field [eV2]
+//    thread t1(calc, n, L, B, "babyIAXO");
+//
+//    // baseline IAXO
+//    L = 20;
+//    B = 2.5 * T2eV;
+//    //thread t2(calc, n, L, B, "baselineIAXO");
+//
+//    // upgraded IAXO
+//    L = 22;
+//    B = 3.5 * T2eV;
+//    //thread t3(calc, n, L, B, "upgradedIAXO");
+//
+//    t1.join();
+//    //t2.join();
+//    //t3.join();
+//
+//    //}
+//
+//    return 0;
+//}
 
 // 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

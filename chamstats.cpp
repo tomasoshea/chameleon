@@ -11,7 +11,7 @@ double CL = 0.95;	// confidence level
 double dE = 10;	// E range [keV]
 int samplesize = 1e3;		// size of random sample
 
-string n = "10"; // model parameter
+//string n = "10"; // model parameter
 
 // conversion factors
 double s2eV = (6.582119569e-16);	// Hz to eV
@@ -147,20 +147,21 @@ double integral( double b, double s, double n ) {
 }
 
 
-void chis( int detector ) {
+void chis( int detector, int nint ) {
 
 	// initialise parameters
 	double A, phiBg, a, t, effD, effO, effT, len;
 	string name;
 	vector<double> flux, m;
-	string ext = "-sym-flux.dat";
+	string ext = "-cham-flux.dat";
 	string path = "data/limits/";
+	string nModel = to_string(nint);
 
 	// choose detector
 
 	if ( detector==0 ) {
 		// babyIAXO parameters
-		name="babyIAXO";// + n;
+		name="babyIAXO" + nModel;
 		A = 0.77;	// detector area [m2]
 		phiBg = 1e-7 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 0.6 * 1e-4;	// XRay detection area [m2]
@@ -176,7 +177,7 @@ void chis( int detector ) {
 
 	else if ( detector==1 ) {
 		// baseline IAXO parameters
-		name="baselineIAXO";// + n;
+		name="baselineIAXO" + nModel;
 		A = 2.3;	// detector area [m2]
 		phiBg = 1e-8 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -192,7 +193,7 @@ void chis( int detector ) {
 
 	else if ( detector==2 ) {
 		// upgraded IAXO parameters
-		name="upgradedIAXO";// + n;
+		name="upgradedIAXO" + nModel;
 		A = 3.9;	// detector area [m2]
 		phiBg = 1e-9 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -238,7 +239,7 @@ void chis( int detector ) {
 	
 	//cout << "chi length: " << chi.size() << "	m length: " << m.size() << endl;
 	// write out
-	string savename = "data/limits/symstats-" + name + "-tPlasmon.dat";
+	string savename = "data/limits/chamstats-" + name + "-tPlasmon.dat";
 	write2D( savename, m, chi );
 }
 
@@ -246,15 +247,17 @@ void chis( int detector ) {
 
 int main(){
 	
+	for( int n = 1; n <= 10; n++ ) {
+
 	// thread all 3 at same time
-	thread t1(chis, 0); usleep(100);	// baby
-	thread t2(chis, 1); usleep(100);	// baseline
-	thread t3(chis, 2); usleep(100);	// upgraded
+	thread t1(chis, 0, n); usleep(100);	// baby
+	thread t2(chis, 1, n); usleep(100);	// baseline
+	thread t3(chis, 2, n); usleep(100);	// upgraded
 	
 	t1.join();
 	t2.join();
 	t3.join();
-	
+	}
 	cout << "\n¡¡complete!!" << endl;
 	return 0;
 }
