@@ -13,7 +13,7 @@ int main( int argc, char** argv ){
        // double y = argv[2];
        double x = 0;
        double y = -8;
-        double a,b;
+       double a,b;
         csqrt(x,y,&a,&b);
         cout << a << " + " << b << "i" << endl;
 

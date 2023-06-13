@@ -22,33 +22,55 @@ fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax2.set(xlim=(1e0, 1e6), ylim=(1e8, 1e11))
 #ax2.set(xlim=(1e0, 1e10),ylim=(1e-6, 1e0))
-ax2.set(xlim=(1e0, 1e20),ylim=(1e-4, 1.01e0))
+ax2.set(xlim=(1e0, 1e20),ylim=(1e-6, 1.1e0))
 
 
 # add IAXO bits
 path = "data/limits/"
 
-norm = nanmax(loadtxt("{}babyIAXO{}-cham-flux.dat".format(path, 10), usecols=1))
 
+# normalise
+norm = 0
+for n in range(1,5):
+    dat = loadtxt("{}babyIAXO{}-cham-flux3.dat".format(path, n))
+    norm2 = nanmax(dat[:,1])
+    print("n = {}   max = {}".format(n,norm2))
+    if norm2 > norm:
+        norm = norm2
+    
 # loop over n values
-for n in range(1,11):
-	dat = loadtxt("{}babyIAXO{}-cham-flux.dat".format(path, n))
+for n in range(1,5):
+	dat = loadtxt("{}babyIAXO{}-cham-flux3.dat".format(path, n))
 	#dat[:,1] = dat[:,1] / nanmax(dat[:,1])
 	dat[:,1] = dat[:,1] / norm
 	ax2.plot(dat[:,0],dat[:,1], label='n = {}'.format(n), zorder=-n)
 	#print("babyIAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-dat = loadtxt("data/limits/babyIAXO-sym-flux.dat")
-x = []
-y = []
-for i in range(len(dat[:,0])):
-    if dat[i,0] <= 1e13:
-        continue
-    else:
-        x.append(dat[i,0])
-        y.append(dat[i,1] / norm)
+dat = loadtxt("data/limits/babyIAXO10-cham-flux3.dat")
+dat[:,1] = dat[:,1] / norm
+ax2.plot(dat[:,0],dat[:,1], color='c', label='n = 10')
 
-ax2.plot(x,y, label='Symmetron', color='m', zorder=-10)
+#dat = loadtxt("data/limits/babyIAXO100-cham-flux.dat")
+#dat[:,1] = dat[:,1] / norm
+#ax2.plot(dat[:,0],dat[:,1], label='n = 100', color='cyan', zorder=10)
+
+#dat = loadtxt("data/limits/babyIAXO1000-cham-flux.dat")
+#dat[:,1] = dat[:,1] / norm
+#ax2.plot(dat[:,0],dat[:,1], label='n=1000', color='red', zorder=10)
+
+dat = loadtxt("data/limits/babyIAXO-sym-flux3.dat")
+dat[:,1] = dat[:,1] / norm
+ax2.plot(dat[:,0],dat[:,1], label='Symmetron', color='m', zorder=-10)
+#x = []
+#y = []
+#for i in range(len(dat[:,0])):
+#    if dat[i,0] <= 1e13:
+#        continue
+#    else:
+#        x.append(dat[i,0])
+#        y.append(dat[i,1] / norm)
+#
+#ax2.plot(x,y, label='Symmetron', color='m', zorder=-10)
 
 #dat = loadtxt("{}-baselineIAXO10-tPlasmon.dat".format(path))
 #ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
@@ -74,5 +96,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/chamFlux-ns-sym.jpg')
+plt.savefig('plots/chamFlux-ns-sym-4.jpg')
 plt.show()

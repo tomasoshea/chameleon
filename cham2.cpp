@@ -203,7 +203,7 @@ void calc ( double n, double L, double B, string detector ) {
     vector<double> BgVec;
     vector<double> BmVec;
     // scan over various Bm
-    for ( double Bm = 1e-10; Bm < 1e25; Bm*=1.01 ) {
+    for ( double Bm = 1; Bm < 1e10; Bm*=1.001 ) {
 
         double w = 1e2;
         //cout << "Bm = " << Bm << "    tan2x = " << 1e10*(4 * w / mSym(Bm)) * Bt / (2 * mpl) << endl;   // limits check
@@ -216,42 +216,42 @@ void calc ( double n, double L, double B, string detector ) {
 
 	// set path for writeout
 	string path = "data/limits/" + detector;
-	string ext = "-cham-flux-test.dat";
+	string ext = "-cham-flux.dat";
 	write2D( path + to_string((int)n) + ext, BmVec, BgVec );
     //write2D( path + ext, BmVec, BgVec );
 }
 
 
-//int main(){
-//
-//    // set model parameter n
-//    double n = 1;
-//    //for( int n = 1; n <= 10; n++ ) {
-//
-//    // run over each
-//
-//    // babyIAXO
-//    double L = 10;  // babyIAXO bore length [m]
-//    double B = 2 * T2eV;   // babyIAXO B-field [eV2]
-//    thread t1(calc, n, L, B, "babyIAXO");
-//
-//    // baseline IAXO
-//    L = 20;
-//    B = 2.5 * T2eV;
-//    //thread t2(calc, n, L, B, "baselineIAXO");
-//
-//    // upgraded IAXO
-//    L = 22;
-//    B = 3.5 * T2eV;
-//    //thread t3(calc, n, L, B, "upgradedIAXO");
-//
-//    t1.join();
-//    //t2.join();
-//    //t3.join();
-//
-//    //}
-//
-//    return 0;
-//}
+int main(){
+
+    // set model parameter n
+    double n = 100;
+    //for( double n = 1; n <= 10; n++ ) {
+
+    // run over each
+
+    // babyIAXO
+    double L = 10;  // babyIAXO bore length [m]
+    double B = 2 * T2eV;   // babyIAXO B-field [eV2]
+    thread t1(calc, n, L, B, "babyIAXO");
+
+    // baseline IAXO
+    L = 20;
+    B = 2.5 * T2eV;
+    thread t2(calc, n, L, B, "baselineIAXO");
+
+    // upgraded IAXO
+    L = 22;
+    B = 3.5 * T2eV;
+    thread t3(calc, n, L, B, "upgradedIAXO");
+
+    t1.join();
+    t2.join();
+    t3.join();
+
+   // }
+
+    return 0;
+}
 
 // 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

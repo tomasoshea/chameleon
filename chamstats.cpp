@@ -153,7 +153,7 @@ void chis( int detector, int nint ) {
 	double A, phiBg, a, t, effD, effO, effT, len;
 	string name;
 	vector<double> flux, m;
-	string ext = "-cham-flux.dat";
+	string ext = "-sym-flux4.dat";
 	string path = "data/limits/";
 	string nModel = to_string(nint);
 
@@ -161,7 +161,7 @@ void chis( int detector, int nint ) {
 
 	if ( detector==0 ) {
 		// babyIAXO parameters
-		name="babyIAXO" + nModel;
+		name="babyIAXO";// + nModel;
 		A = 0.77;	// detector area [m2]
 		phiBg = 1e-7 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 0.6 * 1e-4;	// XRay detection area [m2]
@@ -177,7 +177,7 @@ void chis( int detector, int nint ) {
 
 	else if ( detector==1 ) {
 		// baseline IAXO parameters
-		name="baselineIAXO" + nModel;
+		name="baselineIAXO";// + nModel;
 		A = 2.3;	// detector area [m2]
 		phiBg = 1e-8 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -193,7 +193,7 @@ void chis( int detector, int nint ) {
 
 	else if ( detector==2 ) {
 		// upgraded IAXO parameters
-		name="upgradedIAXO" + nModel;
+		name="upgradedIAXO";// + nModel;
 		A = 3.9;	// detector area [m2]
 		phiBg = 1e-9 * 1e4 * dE;	// background flux [m-2 s-1]
 		a = 1.2 * 1e-4;	// XRay detection area [m2]
@@ -239,7 +239,7 @@ void chis( int detector, int nint ) {
 	
 	//cout << "chi length: " << chi.size() << "	m length: " << m.size() << endl;
 	// write out
-	string savename = "data/limits/chamstats-" + name + "-tPlasmon.dat";
+	string savename = "data/limits/symstats-" + name + "4.dat";
 	write2D( savename, m, chi );
 }
 
@@ -247,7 +247,8 @@ void chis( int detector, int nint ) {
 
 int main(){
 	
-	for( int n = 1; n <= 10; n++ ) {
+	double n = 1;
+	//for( int n = 1; n <= 10; n++ ) {
 
 	// thread all 3 at same time
 	thread t1(chis, 0, n); usleep(100);	// baby
@@ -257,7 +258,7 @@ int main(){
 	t1.join();
 	t2.join();
 	t3.join();
-	}
+	//}
 	cout << "\n¡¡complete!!" << endl;
 	return 0;
 }

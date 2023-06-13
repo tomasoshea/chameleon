@@ -16,7 +16,7 @@ ax2.set(xlim=(0,3e3), ylim=(-0.01,1.01))
 
 dat = loadtxt("data/symB1-spectrum.dat")
 dat[:,1] = dat[:,1] / np.nanmax(dat[:,1])
-ax2.plot(dat[:,0],dat[:,1], color='magenta', label='Bm = 1e1')
+ax2.plot(dat[:,0],dat[:,1], color='magenta')#, label='Bm = 1e1')
 
 #dat = loadtxt("data/chamn4-spectrum.dat")
 #dat[:,1] = dat[:,1] / np.nanmax(dat[:,1])
@@ -31,8 +31,8 @@ ax2.plot(dat[:,0],dat[:,1], color='magenta', label='Bm = 1e1')
 #ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='Bm = 1e5, n=1')
 
 # axes
-ax2.set_xlabel("Symmetron energy [eV]")
-ax2.set_ylabel("Tachocline symmetron flux (normalised)")#[m-2 s-1 eV-1]")
+ax2.set_xlabel("CLP energy [eV]")
+ax2.set_ylabel("Tachocline CLP flux (normalised)")	#[m-2 s-1 eV-1]")
 #ax2.set_xscale('log')
 #ax2.set_yscale('log')
 ax2.legend()

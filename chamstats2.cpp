@@ -113,12 +113,12 @@ double integral( double b, double n, double Bm, double L,
 }
 
 
-void chis( int detector ) {
+void chis( int detector, double nModel ) {
 
 	// initialise parameters
 	double A, phiBg, a, t, effD, effO, effT, len, L, B;
 	string name;
-	string ext = "-cham-flux.dat";
+	string ext = "-cham-flux2.dat";
 	string path = "data/limits/";
 
 	// choose detector

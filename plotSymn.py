@@ -12,20 +12,20 @@ plt.style.use("style.txt")	# import plot style
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
-ax2.set(xlim=(1e0, 1e40), ylim=(1e8, 1e11))
+ax2.set(xlim=(1e3, 1e22))#, ylim=(1e8, 1e11))
 
 # add IAXO bits
 path = "data/limits/symstats"
 
-dat = loadtxt("{}-babyIAXO-tPlasmon.dat".format(path))
+dat = loadtxt("{}-babyIAXO4.dat".format(path))
 ax2.plot(dat[:,0],dat[:,1], color='magenta', label='babyIAXO')
 print("babyIAXO:	{}".format(average(dat[:,1])))
 
-dat = loadtxt("{}-baselineIAXO-tPlasmon.dat".format(path))
+dat = loadtxt("{}-baselineIAXO4.dat".format(path))
 ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
 print("baseline IAXO:	{}".format(average(dat[:,1])))
 
-dat = loadtxt("{}-upgradedIAXO-tPlasmon.dat".format(path))
+dat = loadtxt("{}-upgradedIAXO4.dat".format(path))
 ax2.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
 print("upgraded IAXO:	{}".format(average(dat[:,1])))
 
@@ -45,5 +45,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/symLimits.jpg')
+plt.savefig('plots/symLimits4.jpg')
 plt.show()

@@ -26,21 +26,25 @@ ax2.set(xlim=(1e0, 1e6), ylim=(1e8, 1e11))
 path = "data/limits/chamstats"
 
 # loop over n values
-for n in range(1,10):
-	dat = loadtxt("{}-babyIAXO{}-tPlasmon.dat".format(path, n))
-	ax2.plot(dat[:,0],dat[:,1], color='magenta', label='n = {}'.format(n))
-	print("babyIAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+#for n in range(1,10):
+#	dat = loadtxt("{}-babyIAXO{}-tPlasmon.dat".format(path, n))
+#	ax2.plot(dat[:,0],dat[:,1], color='magenta', label='n = {}'.format(n))
+#	print("babyIAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-#dat = loadtxt("{}-baselineIAXO10-tPlasmon.dat".format(path))
-#ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
-#print("baseline IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
-#
-#dat = loadtxt("{}-upgradedIAXO10-tPlasmon.dat".format(path))
-#ax2.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
-#print("upgraded IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+dat = loadtxt("{}-babyIAXO-tPlasmon.dat".format(path))
+ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baby IAXO')
+print("baby IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+
+dat = loadtxt("{}-baselineIAXO-tPlasmon.dat".format(path))
+ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
+print("baseline IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+
+dat = loadtxt("{}-upgradedIAXO-tPlasmon.dat".format(path))
+ax2.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
+print("upgraded IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
 # add cast
-ax2.hlines(5.74e10, 1e0, 1e6, color='black', ls=':', label='CAST')
+ax2.hlines(5.74e10 / 4, 1e0, 1e6, color='black', ls=':', label='CAST')
 
 # add other limits
 ax2.add_patch( Rectangle( (2e1, 1e8), -1e8, 1e12, color='r', alpha=0.4, label='Torsion balance (n=1)') )
@@ -55,5 +59,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/chamLimits-ns.jpg')
+plt.savefig('plots/chamLimits-ns-1.jpg')
 plt.show()
