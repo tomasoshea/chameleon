@@ -245,6 +245,8 @@ int main(){
     B = 3.5 * T2eV;
     thread t3(calc, n, L, B, "upgradedIAXO");
 
+    cout << pow( B * (L/m2eV) / mpl , 2 ) << endl;
+
     t1.join();
     t2.join();
     t3.join();
