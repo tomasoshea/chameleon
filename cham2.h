@@ -56,6 +56,31 @@ double wp2 = 4*pi*a*ne/(m_e); // plasma frequency squared [eV2]
 //double phi = 0.12;   // CAST bg flux [m-2 s-1] (95% CL)
 
 
+// write out simple datafile
+void write( string name, vector<double> data ) {
+
+	// delete old file if extant
+	if ( remove(name.c_str()) == 0 ) {
+		cout << "file " << name << " deleted." << endl;
+		}
+	
+	// file pointer
+	fstream fout;
+
+	// creates new csv file
+	fout.open(name, ios::out | ios::trunc);
+
+	// Read the input from vector
+	for ( double item : data ) {
+		// Insert the data to file
+		fout << item << endl;
+	}
+	cout << "file " << name << " created succesfully." << endl;
+	
+	fout.close();
+}
+
+
 // write out 2 column datafile
 void write2D( string name, vector<double> data1, vector<double> data2) {
 
@@ -166,31 +191,16 @@ double wIntegral( double n, double Bm, double L, double B ) {
     return item;
 }
 
+// integral for REST solar flux [m-2 s-1]
+double RESTintegral( double n, double wlow ) {
 
-// full IAXO conversion prob
-double fullProb( double Bg, double w, double n, double Bm, double L, double B ) {
-
-    double m2 = mSym( Bm ); // symmetron mass
-    double lw = 4 * w / m2;   // coherence length in vacuum
-    double twoTheta = atan( Bg * B * lw / (2*mpl) );  // tan-1(tan(2theta))
-    //cout << twoTheta << endl;
-
-    if( twoTheta > 0.1 ) {
-        return pow( sin(twoTheta) * sin( L / ( lw * cos(twoTheta) ) ) , 2 );
-        }
-    else { return pow( Bg * Bt * lw / mpl*2, 2 ); }
-    
-}
-
-
-// detector phi from dw integral from full detector prob [m-2 s-1]
-double fullFlux( double Bg, double n, double Bm, double L, double B ) {
-
-    // integrate wrt w over CAST energies (0.5 - 15 keV) by trapezia
+    // integrate wrt w over energy bin
+    double Bm = 1;
     double dw = 1e0;
+    double whigh = wlow + 100;
     double item = 0.;
-    for( double w = 1e2; w < 1e4; w+=dw) {     // omega in eV
-        item += ( pow(Bg,2) * dw * pow(rt/R,2) * fullProb(Bg,w,n,Bm,L,B) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
+    for( double w = wlow; w < whigh; w+=dw) {     // omega in eV
+        item += ( dw * pow(rt/R,2) * (solarFlux( w+dw, n, Bm ) + solarFlux( w, n, Bm )) / 2 );
     }
     return item;
 }
@@ -221,39 +231,23 @@ void calc ( double n, double L, double B, string detector ) {
     //write2D( path + ext, BmVec, BgVec );
 }
 
+void fluxREST() {
 
-int main(){
+	int line = 0;	// for REST writeout
+    int n = 1;
 
-    // set model parameter n
-    double n = 100;
-    //for( double n = 1; n <= 10; n++ ) {
+	// initialise vector etc
+	vector<double> flujo;
+	string name = "data/solarflux_cham.dat";
 
-    // run over each
+    for ( double wlow = 1; wlow < 20e3; wlow += 100 ) {
 
-    // babyIAXO
-    double L = 10;  // babyIAXO bore length [m]
-    double B = 2 * T2eV;   // babyIAXO B-field [eV2]
-    thread t1(calc, n, L, B, "babyIAXO");
+        double flux = RESTintegral( n, wlow );  // [m-2 s-1]
+        flux *= ( 10e-4 / 0.1 );  // [cm-2 s-1 keV-1]
+        flujo.push_back(flux);
+    }
 
-    // baseline IAXO
-    L = 20;
-    B = 2.5 * T2eV;
-    thread t2(calc, n, L, B, "baselineIAXO");
-
-    // upgraded IAXO
-    L = 22;
-    B = 3.5 * T2eV;
-    thread t3(calc, n, L, B, "upgradedIAXO");
-
-    //cout << pow( B * (L/m2eV) / mpl , 2 ) << endl;
-
-    t1.join();
-    t2.join();
-    t3.join();
-
-   // }
-
-    return 0;
+    write(name, flujo);
 }
 
 // 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
