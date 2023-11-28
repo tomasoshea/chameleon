@@ -4,7 +4,7 @@ figure.dpi: 120
 
 axes.titlesize: 20
 axes.labelsize: 20
-axes.prop_cycle : (cycler('color', ['bc80bd' ,'fb8072', 'b3de69','fdb462','fccde5','8dd3c7','ffed6f','bebada','80b1d3', 'ccebc5', 'd9d9d9']))
+#axes.prop_cycle : (cycler('color', ['bc80bd' ,'fb8072', 'b3de69','fdb462','fccde5','8dd3c7','ffed6f','bebada','80b1d3', 'ccebc5', 'd9d9d9']))
 axes.titlelocation: left
 axes.autolimit_mode: round_numbers
 axes.labelcolor: black
