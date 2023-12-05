@@ -37,7 +37,7 @@ double Lam = 2.4e-3;    // cosmological constant [eV] 2.4e-3
 
 // solar params
 double R = 149.5978707e9;	// mean earth-sun distance [m]
-double rSolar = 6.9598E+10;	// solar radius [m]
+double rSolar = 6.9598E+8;	// solar radius [m]
 double xt = 0.7;    //radial location of tachocline [frac]
 double Dx = 0.01;   // tachocline thickness [frac]
 double rt = xt * rSolar;   // radial location of tachocline [m]
