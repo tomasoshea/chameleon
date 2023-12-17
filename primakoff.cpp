@@ -34,14 +34,17 @@ double mCham2( int c, double Bm ) {
 // units Lambda2
 double integrand( int c, double Bm, double w ) {
 	double mg2 = 4*pi*alpha*ne[c]/me;	// assume mg2 = wp2
-	//double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
-	double ms2 = 1e1;					// fixed scalar mass2 [eV2]
+	double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
+	//double ms2 = 1e0;					// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
 	double nt = 2*ne[c];
 	double K2 = 4*pi*alpha*nt/T[c];
-	double l = (K2*K2 - 2*K2*(mg2 + ms2) + pow(mg2 - ms2,2))*pow(T[c],-4);
-	double ln = log(pow(2*w/T[c]/T[c],2)*K2 + l);
+	//double l = (K2*K2 - 2*K2*(mg2 + ms2) + pow(mg2 - ms2,2))*pow(T[c],-4);
+	//double ln = log(pow(2*w/T[c]/T[c],2)*K2 + l);
+	double lnlam = K2 + 2*w*w + ms2 + mg2;
+	double lnc = 2 * sqrt(w*w - ms2) * sqrt(w*w - mg2);
+	double ln = log( (lnlam + lnc) / (lnlam - lnc) );
 
 	if( isnan(ln) ) { return 0; }	// get nan for T = 0
 	if( ln < 0 ) { return 0; }	//
@@ -111,7 +114,7 @@ void spectrum() {
 		count.push_back( solarIntg(w,Bm) );
 	}
 	// write to file
-	string name = "data/primakoff_spectrum_cham_1e7.dat";
+	string name = "data/primakoff_spectrum_cham_1e7-2.dat";
 	write2D( name , energy, count );
 }
 
