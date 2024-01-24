@@ -15,6 +15,8 @@ double J2eV = (1. / 1.602176634e-19);	// Joules to eV (1 / e)
 double m2eV = (1.973269804e-7);	// m-1 to eV
 double K2eV = (8.617333262e-5);	// Kelvin to eV
 double kg2eV = 5.609588604e35;	// from hbar/c2
+double T2eV = 2e-16 * 1e18;		// Tesla to eV2 conversion [eV2/T]
+
 
 // read in datafiles in csv form
 vector<double> read( string name ) {
@@ -77,4 +79,60 @@ void write2D( string name, vector<double> data1, vector<double> data2) {
 	else { cout << "ERROR - ensure vectors are of equal length" << endl; }
 	
 	fout.close();
+}
+
+// read in gaunt factors from matlab matrix files
+vector<vector<double>> readGaunt( string name ) {
+
+	//cout << "Reading file " << name << "..." << endl;
+
+	// open file defined in argument
+	fstream file;
+	file.open(name,ios::in);
+	
+	char delim(' ');	// define delimiter for file parsing
+	
+	if (file.is_open()){   // checking whether the file is open
+		string temp;	// define temporary storage string
+		vector<vector<double>> g2D; // 2D matrix to store rows
+		vector<double> row;	// define vector to store input values and return
+		vector<double> x;	// define vector to store input values and return
+		
+		int c = 0;	// define counter for elements
+		int line = 0;	// counter for lines
+		
+		while( !file.eof() ) {  // loop until end of file
+		
+			getline(file, temp, delim);	// get one row
+			
+			// check data is not empty
+			if( temp == "\n" ) { continue; }
+			
+			double item = stod(temp);	// convert string to double
+
+			// add a zero on first line
+			if( c == 0 ) { row.push_back(0.); }
+			
+			row.push_back(item);	// append double to vector
+			c++;
+			
+			// when row is full append to 2D vector and wipe row				
+			if( row.size() == 201 ) {
+			
+				g2D.push_back(row);
+				row.clear();
+				
+				line++;
+			}
+
+			if( line == 501 ) { break; }
+
+		}
+		
+	file.close();   // close the file object.
+	
+	return g2D;	// returns vector of values
+	}
+	
+	else{ cout << "couldn't find file: " << name << endl ; vector<vector<double>> err = {{69.}} ; return err ; }
 }

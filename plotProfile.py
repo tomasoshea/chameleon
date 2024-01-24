@@ -15,32 +15,23 @@ plt.style.use("style.txt")	# import plot style
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
-#ax2.set(xlim=(0,1e1), ylim=(0, 1.01))
-ax2.set(xlim=(0,1), ylim=(0, 1.02e49))
+ax2.set(xlim=(0,1), ylim=(1e38, 1e48))
+#ax2.set(xlim=(0,1), ylim=(0, 1.02e49))
 
-dat = loadtxt("data/primakoff_profile_1eV.dat")
+dat = loadtxt("data/primakoff_profile_1e3.dat")
 #dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
-ax2.plot(dat[:,0]/R,dat[:,1], ls='-',label='Fixed m = 1eV')
+ax2.plot(dat[:,0]/R,dat[:,1], ls='-',label='Primakoff 1e3')
 
-dat = loadtxt("data/primakoff_profile_cham_1e6.dat")
+dat = loadtxt("data/scalarB_profile_cham-1e3.dat")
 #dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
-ax2.plot(dat[:,0]/R,dat[:,1], ls='-', label='Bm = 1e6')
-
-dat = loadtxt("data/primakoff_profile_cham_1e7.dat")
-#dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
-ax2.plot(dat[:,0]/R,dat[:,1], ls='-', label='Bm = 1e7')
-
-#dat = loadtxt("data/primakoff_profile_cham_1e8.dat")
-##dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
-#ax2.plot(dat[:,0]/R,dat[:,1], ls='-', label='Bm = 1e8')
-
+ax2.plot(dat[:,0]/R,dat[:,1], ls='-',label='B-field 1e3')
 
 # axes
 ax2.set_xlabel("Solar radius fraction")
-ax2.set_ylabel("Emission rate dN/dr [eV2 Lambda2]")	#[m-2 s-1 eV-1]")
+ax2.set_ylabel("Emission rate dN/dr [eV Lambda2]")	#[m-2 s-1 eV-1]")
 #ax2.set_xscale('log')
-#ax2.set_yscale('log')
+ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/primakoff_profile.jpg')
+plt.savefig('plots/comparison_profile-log.jpg')
 plt.show()
