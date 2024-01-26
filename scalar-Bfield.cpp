@@ -95,8 +95,8 @@ double Bfield( int c ) {
 double integrand( int c, double Bm, double w, double G ) {
 	if( T[c]==0 ) { return 0; }					// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2
-	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
-	//double ms2 = 1e-6;							// fixed scalar mass2 [eV2]
+	//double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
 	double B = Bfield(c);						// solar B field [eV2]
@@ -198,14 +198,17 @@ void Eloss() {
 // calculate differential particle flux spectrum by intg over solar volume
 void spectrum() {
 	vector<double> count, energy;
-	double Bm = 1e7;		// cham matter coupling
-	for( double w = 1e0; w < 2e4; w+=1 ){
+	double Bm = 1e3;		// cham matter coupling, or fixed scalar mass
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
 		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
-		//cout << "w = "<<w/1e3<<"keV (of 20keV)" << endl;
+		if( (int)w % (int)(10*dw) == 0 ) {
+		cout << "w = "<<w/1e3<<"keV (of 20keV)" << endl;
+		}
 	}
 	// write to file
-	string name = "data/scalarB_spectrum_cham_1e7.dat";
+	string name = "data/scalarB_spectrum_fixed_1e3.dat";
 	write2D( name , energy, count );
 }
 
