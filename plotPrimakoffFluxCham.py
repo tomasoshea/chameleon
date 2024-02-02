@@ -13,7 +13,7 @@ plt.style.use("style.txt")	# import plot style
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax2.set(xlim=(1e-3,20), ylim=(1e12, 1e22))
-ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 5e19))
+#ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 5e19))
 
 
 # Primakoff
@@ -44,27 +44,32 @@ ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 5e19))
 #dat = loadtxt("data/scalarB_spectrum_cham_1e3.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B-field 1e3 (test)')
 
-dat = loadtxt("data/scalarB_spectrum_fixed_1e-3-test.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--', label='m = 1 meV')
-
-dat = loadtxt("data/scalarB_spectrum_fixed_1e0-test.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='m = 1 eV')
-
-dat = loadtxt("data/scalarB_spectrum_fixed_1e3.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label='m = 1 keV')
+#dat = loadtxt("data/scalarB_spectrum_fixed_1e-3-test.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--', label='m = 1 meV')
+#
+#dat = loadtxt("data/scalarB_spectrum_fixed_1e0-test.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='m = 1 eV')
+#
+#dat = loadtxt("data/scalarB_spectrum_fixed_1e3.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label='m = 1 keV')
 
 #dat = loadtxt("data/scalarB_spectrum_cham_1e6.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label='B-field 1e6')
 #
 #dat = loadtxt("data/scalarB_spectrum_cham_1e7.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label='B-field 1e7')
+
+dat = loadtxt("data/primakoffV3_spectrum_fixed_1e-3--test.dat")
+ax2.plot(dat[:,0],dat[:,1], ls='-', label='m = 1 meV')
+
+
  
 # axes
-ax2.set_xlabel("Scalar energy [keV]")
+ax2.set_xlabel("Scalar energy [eV]")
 ax2.set_ylabel("dPhi/dw [eV2] * Lambda2")	#[m-2 s-1 eV-1]")
-ax2.set_xscale('log')
+#ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/scalarB_fixed-log.jpg')
+plt.savefig('plots/primakoffV3-test.jpg')
 plt.show()
