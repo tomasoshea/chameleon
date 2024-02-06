@@ -95,15 +95,15 @@ double Bfield( int c ) {
 double integrand( int c, double Bm, double w, double G ) {
 	if( T[c]==0 ) { return 0; }					// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2
-	//double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
-	double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
+	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	//double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
 	double B = Bfield(c);						// solar B field [eV2]
 	//if( core==1 ) { cout<<B<<endl; }
 
-	return 8/(pi*pi) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
-			* G/(exp(w/T[c]) - 1);	// [Lambda2 ~ eV2]
+	return 1/(2*pi*pi*Mpl*Mpl) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
+			* G/(exp(w/T[c]) - 1);	// [eV Bg-2]
 }
 
 
@@ -176,21 +176,23 @@ void profile() {
 
 
 // calculate energy loss as a function of m
+// units eV Bm-2
 void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
-	double mw = 1.1;
-	for( double ms = 1e-6; ms < 1e6; ms*=1.1 ) {
-		double ms2 = ms*ms;
+	double dw = 1e1;
+	for( double Bm = 1e0; Bm < 1e8; Bm*=10 ) {
 		double total = 0;
-		for( double w = ms; w < 1e6; w*=mw ) {
-			total += 0.5*w*(mw-1)*( solarIntg(w*mw,ms2) + solarIntg(w,ms2) );
+		for( double w = dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
 		}
-		mass.push_back(ms);
+		mass.push_back(Bm);
 		Q.push_back(total);
+		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
+		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/scalarB_Eloss.dat";
+	string name = "data/scalarB_Eloss_cham_1e3.dat";
 	write2D( name , mass, Q );
 }
 
@@ -219,6 +221,7 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//profile();
-	spectrum();
+	//spectrum();
+	Eloss();
 	return 0;
 }

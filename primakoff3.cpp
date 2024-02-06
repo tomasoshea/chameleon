@@ -59,40 +59,57 @@ double GammaPhoton( double w, int c, double g1, double g2 ) {
 
 // integral I(u,v) solved analytically in cross section calc
 // dimensionless, with dimensionless arguments
-double curlyA( double u, double v ) {
-	return -u*log( (u*u + v*v + 1 - 2*u)/(u*u + v*v + 1 + 2*u) )
-			- (u*u - v*v - 1)/v *( atan((1-u)/v) - atan((1+u)/v) )
+double curlyA( double a, double b ) {
+	return a*log( (pow(a+1,2) + b*b)/(pow(a-1,2) + b*b) )
+			+ (b*b - a*a + 1)/b *(atan((1-a)/b) + atan(1-a)/b)
 			- 2;
 }
-
-
 double curlyAapprox( double u, double v ) {
-return 4*u/(v*v + 2)
+	return 4*u/(v*v + 2)
 			- (u*u - v*v - 1)/v *( atan((1-u)/v) - atan((1+u)/v) )
 			- 2;
 }
 
+double curlyB( double a ) {
+	return 2*log( (a+1)/(a-1) ) - 4;
+}
+
+// integral I(u,v) solved analytically in cross section calc
+// dimensionless, with dimensionless arguments
+double curlyI( double u, double v ) {
+	return (u*u - 1)/v*log((u-1)/(u+1)) - (pow(u+v,2) - 1)/v*log((u+v-1)/(u+v+1)) - 2;
+}
+double curlyIapprox( double u, double v ) {		// for u->1
+	return u*u/v - (v+2)*log(v/(v+2)) - 2;
+}
 
 
 // differential scalar production rate on earth d2N/dr/dw times Lambda2
-// units Lambda2
+// units eV Bm-2
 double integrand( int c, double Bm, double w, double Ggamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
-	//double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
-	double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
+	double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
+	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
 	double K2 = 8*pi*alpha*ne[c]/T[c];			// Debye screening scale ^2 [eV2]
 	double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
 	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
-	double uArg = (2*w*w - ms2)/(2*kgamma*kphi);	// u for curlyA
-	double vArg = w*Ggamma/(2*kphi*kgamma);		// v for curlyA
-	double Auv = curlyA(uArg,vArg);
-	if(uArg < 1.01) { Auv = curlyAapprox(uArg,vArg); }
+	double uArg = kgamma/(2*kphi) + kphi/(2*kgamma);	// u for curlyI
+	double vArg = K2/(2*kphi*kgamma);		// v for curlyI
+	double Iuv = curlyI(uArg,vArg);
+	if(uArg < 1.01) { Iuv = curlyIapprox(uArg,vArg); }
+//	double aArg = (2*w*w - ms2)/(2*kgamma*kphi);	// u for curlyA
+//	double bArg = w*Ggamma/(2*kphi*kgamma);		// v for curlyA
+	//cout<<bArg<<endl;
+	//double Aab = curlyB(aArg);
+	//if( aArg/bArg < 1e3 ) { Aab = curlyA(aArg,bArg); }
+	//if(aArg < 1.01) { Aab = curlyIapprox(aArg,bArg); }
 
-	return 4*alpha/(9*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
-			* w*w*w * kphi/kgamma/kgamma * Auv;		// [Lambda2 ~ eV2]
+
+	return alpha/(18*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
+			* w*w*w * kphi/kgamma/kgamma * Iuv;		// [eV Bg^-2]
 }
 
 
@@ -119,7 +136,7 @@ double L_integrand( int c, double Bm, double w, double kgamma ) {
 double solarIntg( double w, double Bm ) {
 	double total = 0;
 	for( int c = 0; c < r.size() - 1; c++ ) {
-		// select g(w, T) value from matrix
+		/*// select g(w, T) value from matrix
 		int indexT1;
 		int indexT2;
 		int indexX1;
@@ -135,9 +152,8 @@ double solarIntg( double w, double Bm ) {
 		double g1 = z1[ indexT1 ][ indexX1 ];
 		double g2 = z2[ indexT2 ][ indexX2 ];
 		double G = GammaPhoton(w, c, g1, g2);
-
+		*/double G = 0;
 		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1, Bm, w, G) + integrand(c, Bm, w, G));
-		if(r[c+1] < r[c]) { cout<<r[c+1]<<"	"<<r[c]<<"	"<<c<<endl; }
 	}
 	return total;
 }
@@ -180,17 +196,17 @@ void spectrum() {
 	vector<double> count, energy;
 	//double ms = 1e-3;		// scalar mass 1 eV
 	//double ms2 = ms*ms;
-	double Bm = 1e-3;		// cham matter coupling
+	double Bm = 1e6;		// cham matter coupling
 	double dw = 1e0;
-	for( double w = dw; w < 1e3; w+=dw ){
+	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
 		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
-		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-		if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 300eV"<<endl; }
+		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
 
 	}
 	// write to file
-	string name = "data/primakoffV3_spectrum_fixed_1e-3--test.dat";
+	string name = "data/primakoffV3_spectrum_cham_1e6.dat";
 	write2D( name , energy, count );
 }
 
@@ -238,31 +254,35 @@ void k_spectrum_full() {
 
 
 // calculate energy loss as a function of m
+// units eV2 Bm-2
 void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
-	double mw = 1.1;
-	for( double ms = 1e-6; ms < 1e6; ms*=1.1 ) {
-		double ms2 = ms*ms;
+	double dw = 1e1;
+	for( double Bm = 1e0; Bm < 1e8; Bm*=1.1 ) {
 		double total = 0;
-		for( double w = ms; w < 1e6; w*=mw ) {
-			total += 0.5*w*(mw-1)*( solarIntg(w*mw,ms2) + solarIntg(w,ms2) );
+		for( double w = dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
 		}
-		mass.push_back(ms);
+		mass.push_back(Bm);
 		Q.push_back(total);
+		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
+		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/primakoff_Eloss.dat";
+	string name = "data/primakoff_Eloss_1e3.dat";
 	write2D( name , mass, Q );
 }
 
 
 int main() { 
-	// convert Gaunt factor Theta to T in eV
+	/*// convert Gaunt factor Theta to T in eV
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
-
+	*/
+	
 	//profile();
-	spectrum();
+	//spectrum();
+	Eloss();
 	return 0;
 	}
