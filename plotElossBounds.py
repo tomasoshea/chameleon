@@ -29,7 +29,12 @@ ax2.plot(dat[:,0],Bg, ls='-', label=r'Primakoff, $\beta_m = 10^3$')
 
 dat = loadtxt("data/scalarB_Eloss_cham_1e3.dat")
 Bg = np.sqrt(Lsolar/10/dat[:,1])
-ax2.plot(dat[:,0],Bg, ls='--',label=r'B-field, $\beta_m = 10^3$')
+#ax2.plot(dat[:,0],Bg, ls='--',label=r'B-field, $\beta_m = 10^3$')
+
+dat = loadtxt("data/scalarB_Eloss_cham_1e3--boost.dat")
+Bg = np.sqrt(Lsolar/10/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls=':',label=r'B-field (boost), $\beta_m = 10^3$')
+
 
 
  

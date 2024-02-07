@@ -21,6 +21,7 @@ int ucount = 0;
 
 // solar params
 vector<double> ne = read("data/ne.dat");		// electron number density [eV3]
+vector<double> wp = read("data/wp.dat");		// electron number density [eV3]
 vector<double> T = read("data/T.dat");			// solar temperature [eV]
 vector<double> r = read("data/r.dat");			// radial distance [eV-1]
 vector<double> rho = read("data/rho.dat");		// solar density [eV4]
@@ -74,6 +75,13 @@ double curlyB( double a ) {
 	return 2*log( (a+1)/(a-1) ) - 4;
 }
 
+double curlyD( double y, double v) {
+	double u = 1/(2*y) + y/2;
+	return pow(u-y,2)/v *log((u+1)/(u-1))
+			- pow(u+v-y,2)/v*log((u+v+1)/(u+v-1))
+			+ 2;
+}
+
 // integral I(u,v) solved analytically in cross section calc
 // dimensionless, with dimensionless arguments
 double curlyI( double u, double v ) {
@@ -83,17 +91,16 @@ double curlyIapprox( double u, double v ) {		// for u->1
 	return u*u/v - (v+2)*log(v/(v+2)) - 2;
 }
 
-
 // differential scalar production rate on earth d2N/dr/dw times Lambda2
 // units eV Bm-2
 double integrand( int c, double Bm, double w, double Ggamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
-	double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
+	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
 	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
-	double K2 = 8*pi*alpha*ne[c]/T[c];			// Debye screening scale ^2 [eV2]
+	double K2 = 8*pi*alpha*ne[c]/T[c];		// Debye screening scale ^2 [eV2]
 	double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
 	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
 	double uArg = kgamma/(2*kphi) + kphi/(2*kgamma);	// u for curlyI
@@ -107,17 +114,17 @@ double integrand( int c, double Bm, double w, double Ggamma ) {
 	//if( aArg/bArg < 1e3 ) { Aab = curlyA(aArg,bArg); }
 	//if(aArg < 1.01) { Aab = curlyIapprox(aArg,bArg); }
 
-
 	return alpha/(18*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
 			* w*w*w * kphi/kgamma/kgamma * Iuv;		// [eV Bg^-2]
 }
 
 
-// differential scalar production rate on earth d2N/dr/dk times Lambda2
+// differential scalar production rate on earth d2N/dw/dk times Bg2
 // pure longitudinal component only
 // units Lambda2
-double L_integrand( int c, double Bm, double w, double kgamma ) {
+double L_integrand( int c, double Bm, double kgamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
+	double w = wp[c];						// omega is plasma freq
 	//double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
 	double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= ms2 ) { return 0; }
@@ -126,10 +133,11 @@ double L_integrand( int c, double Bm, double w, double kgamma ) {
 	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
 	double yArg = kgamma/kphi;				// y for curlyA
 	double vArg = K2/(2*kphi*kgamma);		// v for curlyA
-	double Auvy = curlyA(yArg,vArg);
+	double Dyuv = curlyD(yArg,vArg);
+	//cout << Dyuv << endl;
 
-	return 8*alpha/(9*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
-			* (w - kgamma*kgamma/w) * Auvy;		// [Lambda2 ~ eV2]
+	return alpha/(18*16*Mpl*Mpl*pi*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
+			* w*w*kphi/kgamma * Dyuv;		// [eV2]
 }
 
 // integral over solar volume, for a given scalar mass and energy
@@ -152,20 +160,38 @@ double solarIntg( double w, double Bm ) {
 		double g1 = z1[ indexT1 ][ indexX1 ];
 		double g2 = z2[ indexT2 ][ indexX2 ];
 		double G = GammaPhoton(w, c, g1, g2);
-		*/double G = 0;
+		*/
+		double G = 0;
 		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1, Bm, w, G) + integrand(c, Bm, w, G));
 	}
 	return total;
 }
 
-// integral over solar volume, for a given scalar mass and energy
-double k_solarIntg( double k, double w, double Bm ) {
+// integral over k_gamma for l-plasmon
+double kIntg( double Bm, int c ) {
 	double total = 0;
-	for( int c = 0; c < r.size() - 1; c++ ) {
-		total += 0.5 * (r[c+1] - r[c]) * (L_integrand(c+1, Bm, w, k) + L_integrand(c, Bm, w, k));
-		if(r[c+1] < r[c]) { cout<<r[c+1]<<"	"<<r[c]<<"	"<<c<<endl; }
+	double kD = sqrt(8*pi*alpha*ne[c]/T[c]);
+	double dk = kD/100;
+	for( double k = dk; k < kD; k+= dk ) {
+		//cout << k << endl;
+		total += 0.5 * dk * (L_integrand(c+1, Bm, k) + L_integrand(c, Bm, k));
 	}
 	return total;
+}
+
+void L_spectrum() {
+	vector<double> count, energy;
+	//double ms = 1e-3;		// scalar mass 1 eV
+	//double ms2 = ms*ms;
+	double Bm = 1e-3;		// cham matter coupling
+	for( int j = wp.size()-1; j >=0; j-- ){
+		energy.push_back(wp[j]);
+		count.push_back( kIntg(Bm, j) * abs((r[j+1]-r[j])/(wp[j+1]-wp[j])) /(4*pi*dSolar*dSolar) );
+		//cout << abs((r[j+1]-r[j])/(wp[j+1]-wp[j])) << endl;
+	}
+	// write to file
+	string name = "data/primakoffV3_L-spectrum_fixed_1e-3.dat";
+	write2D( name , energy, count );
 }
 
 /*
@@ -196,7 +222,7 @@ void spectrum() {
 	vector<double> count, energy;
 	//double ms = 1e-3;		// scalar mass 1 eV
 	//double ms2 = ms*ms;
-	double Bm = 1e6;		// cham matter coupling
+	double Bm = 1e-3;		// cham matter coupling
 	double dw = 1e0;
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
@@ -206,52 +232,9 @@ void spectrum() {
 
 	}
 	// write to file
-	string name = "data/primakoffV3_spectrum_cham_1e6.dat";
+	string name = "data/primakoffV3_spectrum_fixed_1e6.dat";
 	write2D( name , energy, count );
 }
-
-
-// calculate differential particle flux spectrum by intg over solar volume
-void k_spectrum() {
-	vector<double> count, energy;
-	//double ms = 1e-3;		// scalar mass 1 eV
-	//double ms2 = ms*ms;
-	double Bm = 1e-3;		// cham matter coupling
-	double w = 1e2;
-	for( double k = 1e0; k < 2e4; k+=1 ){
-		if(k>=w) { continue; }
-		energy.push_back(k);
-		count.push_back( k_solarIntg(k,w,Bm) /(4*pi*dSolar*dSolar) );
-	}
-	// write to file
-	string name = "data/L_primakoff_diff_k-spectrum_fixed_1e-3_1e2.dat";
-	write2D( name , energy, count );
-}
-
-
-// calculate differential particle flux spectrum by intg over solar volume
-// looking at flux as a fn of k_gamma
-void k_spectrum_full() {
-	vector<double> count, wavenumber;
-	//double ms = 1e-3;		// scalar mass 1 eV
-	//double ms2 = ms*ms;
-	double Bm = 1e0;		// cham matter coupling
-	double dw = 1e2;
-	for( double k = dw; k < 2e4; k+=dw ){
-		double total = 0;
-		for( double w = dw; w < 2e4; w+=dw ) {
-			if( w < k ) { continue; }
-			total += dw/2 * (k_solarIntg(k,w,Bm) + k_solarIntg(k,w+dw,Bm));
-		}
-		wavenumber.push_back(k);
-		count.push_back( total/(4*pi*dSolar*dSolar) );
-		cout<<"k = "<<k/1e3<<"keV of 20keV"<<endl;
-	}
-	// write to file
-	string name = "data/L_primakoff_k-spectrum_fixed_1e0.dat";
-	write2D( name , wavenumber, count );
-}
-
 
 // calculate energy loss as a function of m
 // units eV2 Bm-2
@@ -282,7 +265,7 @@ int main() {
 	*/
 	
 	//profile();
-	//spectrum();
-	Eloss();
+	L_spectrum();
+	//Eloss();
 	return 0;
 	}

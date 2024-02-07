@@ -13,6 +13,7 @@ double me = 510998.950;							// e- mass [eV]
 double Mpl = 2e27;   							// planck mass [eV]
 double E = 2e-3;    							// cham potential energy scale [eV] (2.4e-3 for cosmological const)
 double n = 1;									// chameleon potential 1/phi^n
+double zeta3 = 1.202056903159594;				// Riemann zeta(3)
 
 double dSolar = 149.5978707e9/m2eV;				// mean earth-sun distance [eV-1]
 double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
@@ -24,6 +25,7 @@ double r1 = 0.732*rSolar;						// [eV-1]
 double d1 = 0.02*rSolar;						// [eV-1]
 double r2 = 0.96*rSolar;						// [eV-1]
 double d2 = 0.035*rSolar;						// [eV-1]
+double ngamma0 = 1e25*m2eV*m2eV*s2eV;			// photon flux at r0 [eV3]
 
 // solar params
 vector<double> ne = read("data/ne.dat");		// electron number density [eV3]
@@ -48,7 +50,7 @@ double mCham2( int c, double Bm ) {
 }
 
 
-// T plasmon absorbtion length
+// T plasmon absorbtion length [eV]
 double GammaPhoton( double w, int c, double g1, double g2 ) {
 
 	double p1 = 64 * pow(pi,2) * pow(alpha,3);
@@ -89,21 +91,36 @@ double Bfield( int c ) {
 	else { return 0; }
 }
 
+// solved integral I(a)
+double IB(double a) {
+	return sqrt(pi/2)*(sqrt(a+sqrt(a*a+4)) - sqrt(2*a));
+}
+
+// Gamma boosted by Luca factor for photon scatter
+double boostedGamma( int c, double G, double kgamma, double kphi ) {
+	double q = sqrt(abs(kgamma*kgamma - kphi*kphi));
+	return G /( ngamma0*pow(r0/r[c],2)*pi/4/zeta3*pow(T[c],-3)
+			*sqrt(q/2/m2eV) * IB(2*G/q) );
+}
+
 
 // differential scalar production rate d2N/dr/dw times Lambda2
 // units Lambda2
 double integrand( int c, double Bm, double w, double G ) {
 	if( T[c]==0 ) { return 0; }					// solves weird behaviour when ne = T = 0
-	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2
-	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2 [eV2]
+	double ms2 = mCham2(c,Bm);					// chameleon mass2 [eV2]
 	//double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
+	double kgamma = sqrt(w*w - mg2);			// photon momentum [eV]
+	double kphi = sqrt(w*w - ms2);				// scalar momentum [eV]
 	double B = Bfield(c);						// solar B field [eV2]
 	//if( core==1 ) { cout<<B<<endl; }
+	double Gboost = boostedGamma(c,G,kgamma,kphi);
 
 	return 1/(2*pi*pi*Mpl*Mpl) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
-			* G/(exp(w/T[c]) - 1);	// [eV Bg-2]
+			* Gboost/(exp(w/T[c]) - 1);	// [eV Bg-2]
 }
 
 
@@ -180,7 +197,7 @@ void profile() {
 void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
-	double dw = 1e1;
+	double dw = 1e2;
 	for( double Bm = 1e0; Bm < 1e8; Bm*=10 ) {
 		double total = 0;
 		for( double w = dw; w < 2e4; w+=dw ){
@@ -192,7 +209,7 @@ void Eloss() {
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/scalarB_Eloss_cham_1e3.dat";
+	string name = "data/scalarB_Eloss_cham_1e3--boost.dat";
 	write2D( name , mass, Q );
 }
 
