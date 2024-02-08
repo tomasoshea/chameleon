@@ -13,7 +13,7 @@ plt.style.use("style.txt")	# import plot style
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax2.set(xlim=(1e-3,20), ylim=(1e12, 1e22))
-ax2.set(xlim=(1e-3,2e1), ylim=(1e-45, 9e-35))
+ax2.set(xlim=(1e-3,2e1), ylim=(1e-44, 1e-34))
 Mpl = 2e27		# Planck mass [eV]
 
 
@@ -27,7 +27,7 @@ Mpl = 2e27		# Planck mass [eV]
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label='m = 1 eV (T)')
 #
 dat = loadtxt("data/primakoffV3_spectrum_fixed_1e0.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-', label='m = 1 eV')
+ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-', label='T-plasmon')
 
 dat = loadtxt("data/primakoffV3_spectrum_cham_1e3.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-.', label=r'$\beta_m = 10^3$')
@@ -38,8 +38,8 @@ dat = loadtxt("data/primakoffV3_spectrum_cham_1e6.dat")
 dat = loadtxt("data/primakoffV3_spectrum_cham_1e7.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label=r'$\beta_m = 10^7$')
 
-dat = loadtxt("data/primakoffV3_L-spectrum_fixed_1e-3.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label=r'L: m = 1 meV')
+dat = loadtxt("data/primakoffV3_L-spectrum_fixed_1e0.dat")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label='L-plasmon')
 
 
 # B-field

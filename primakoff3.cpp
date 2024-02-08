@@ -136,7 +136,7 @@ double L_integrand( int c, double Bm, double kgamma ) {
 	double Dyuv = curlyD(yArg,vArg);
 	//cout << Dyuv << endl;
 
-	return alpha/(18*16*Mpl*Mpl*pi*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
+	return alpha/(18*4*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
 			* w*w*kphi/kgamma * Dyuv;		// [eV2]
 }
 
@@ -183,14 +183,14 @@ void L_spectrum() {
 	vector<double> count, energy;
 	//double ms = 1e-3;		// scalar mass 1 eV
 	//double ms2 = ms*ms;
-	double Bm = 1e-3;		// cham matter coupling
+	double Bm = 1e0;		// cham matter coupling
 	for( int j = wp.size()-1; j >=0; j-- ){
 		energy.push_back(wp[j]);
 		count.push_back( kIntg(Bm, j) * abs((r[j+1]-r[j])/(wp[j+1]-wp[j])) /(4*pi*dSolar*dSolar) );
 		//cout << abs((r[j+1]-r[j])/(wp[j+1]-wp[j])) << endl;
 	}
 	// write to file
-	string name = "data/primakoffV3_L-spectrum_fixed_1e-3.dat";
+	string name = "data/primakoffV3_L-spectrum_fixed_1e0.dat";
 	write2D( name , energy, count );
 }
 
