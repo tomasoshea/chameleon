@@ -13,7 +13,7 @@ plt.style.use("style.txt")	# import plot style
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax2.set(xlim=(1e-3,20), ylim=(1e12, 1e22))
-ax2.set(xlim=(1e-3,2e1), ylim=(1e-44, 1e-34))
+ax2.set(xlim=(1e-3,2e1), ylim=(1e-42, 1e-33))
 Mpl = 2e27		# Planck mass [eV]
 
 
@@ -26,20 +26,32 @@ Mpl = 2e27		# Planck mass [eV]
 #dat = loadtxt("data/primakoff_spectrum_1e0_newer.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label='m = 1 eV (T)')
 #
-dat = loadtxt("data/primakoffV3_spectrum_fixed_1e0.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-', label='T-plasmon')
+#dat = loadtxt("data/primakoffV3_spectrum_fixed_1e0.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-', label='T-plasmon')
 
 dat = loadtxt("data/primakoffV3_spectrum_cham_1e3.dat")
-#ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-.', label=r'$\beta_m = 10^3$')
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label="T")
 
-dat = loadtxt("data/primakoffV3_spectrum_cham_1e6.dat")
+dat = loadtxt("data/primakoffV3_L-spectrum_cham_1e3.dat")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label="L")
+
+#dat = loadtxt("data/primakoffV3_spectrum_n4_1e3.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label="n=4")
+
+#dat = loadtxt("data/primakoffV3_spectrum_n10_1e3.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--', label="n=10")
+
+#dat = loadtxt("data/primakoffV3_spectrum_n400_1e3.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label="n=400")
+
+#dat = loadtxt("data/primakoffV3_spectrum_cham_1e6.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--', label=r'$\beta_m = 10^6$')
 
-dat = loadtxt("data/primakoffV3_spectrum_cham_1e7.dat")
+#dat = loadtxt("data/primakoffV3_spectrum_cham_1e7.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label=r'$\beta_m = 10^7$')
 
-dat = loadtxt("data/primakoffV3_L-spectrum_fixed_1e0.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label='L-plasmon')
+#dat = loadtxt("data/primakoffV3_L-spectrum_fixed_1e0.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label='L-plasmon')
 
 
 # B-field
@@ -85,5 +97,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/primakoffV3-L--log.jpg')
+plt.savefig('plots/primakoffV3-LT--log.jpg')
 plt.show()

@@ -13,7 +13,7 @@ double alpha = 1/137.035999084;
 double me = 510998.950;		// e- mass [eV]
 double Mpl = 2e27;   		// planck mass [eV]
 double E = 2e-3;    		// cham potential energy scale [eV] (2.4e-3 for cosmological const)
-double n = 1;				// chameleon potential 1/phi^n
+double n = 0;				// chameleon potential 1/phi^n
 double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 double dSolar = 149.5978707e9/(1.973269804e-7);		// mean earth-sun distance [eV-1]
 int nancount = 0;
@@ -38,6 +38,7 @@ vector<vector<double>> z2 = readGaunt("data/Z2.dat");	// gaunt factors for Z=2
 // cham model params n (phi-n potential), Bm (matter coupling)
 // assume rho dominated by matter density
 double mCham2( int c, double Bm ) {
+	if(n==0) { cout<<"ERROR! n = 0"<<endl; return 0; }
 	double E4n = pow(E,4+n);
 	return n*(n+1)*E4n*pow( Bm*rho[c]/(n*Mpl*E4n), (n+2)/(n+1) );
 }
@@ -125,8 +126,8 @@ double integrand( int c, double Bm, double w, double Ggamma ) {
 double L_integrand( int c, double Bm, double kgamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
 	double w = wp[c];						// omega is plasma freq
-	//double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
-	double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
+	double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
+	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= ms2 ) { return 0; }
 	double K2 = 8*pi*alpha*ne[c]/T[c];		// Debye screening scale ^2 [eV2]
 	//double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
@@ -136,7 +137,7 @@ double L_integrand( int c, double Bm, double kgamma ) {
 	double Dyuv = curlyD(yArg,vArg);
 	//cout << Dyuv << endl;
 
-	return alpha/(18*4*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
+	return alpha/(8*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
 			* w*w*kphi/kgamma * Dyuv;		// [eV2]
 }
 
@@ -179,20 +180,6 @@ double kIntg( double Bm, int c ) {
 	return total;
 }
 
-void L_spectrum() {
-	vector<double> count, energy;
-	//double ms = 1e-3;		// scalar mass 1 eV
-	//double ms2 = ms*ms;
-	double Bm = 1e0;		// cham matter coupling
-	for( int j = wp.size()-1; j >=0; j-- ){
-		energy.push_back(wp[j]);
-		count.push_back( kIntg(Bm, j) * abs((r[j+1]-r[j])/(wp[j+1]-wp[j])) /(4*pi*dSolar*dSolar) );
-		//cout << abs((r[j+1]-r[j])/(wp[j+1]-wp[j])) << endl;
-	}
-	// write to file
-	string name = "data/primakoffV3_L-spectrum_fixed_1e0.dat";
-	write2D( name , energy, count );
-}
 
 /*
 // calculate emission rate profile over solar radius (dN/dr)
@@ -222,7 +209,8 @@ void spectrum() {
 	vector<double> count, energy;
 	//double ms = 1e-3;		// scalar mass 1 eV
 	//double ms2 = ms*ms;
-	double Bm = 1e-3;		// cham matter coupling
+	double Bm = 1e3;		// cham matter coupling
+	n = 1;					// cham model n
 	double dw = 1e0;
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
@@ -232,7 +220,31 @@ void spectrum() {
 
 	}
 	// write to file
-	string name = "data/primakoffV3_spectrum_fixed_1e6.dat";
+	string name = "data/primakoffV3_spectrum_cham_1e3.dat";
+	write2D( name , energy, count );
+}
+
+void L_spectrum() {
+	vector<double> count, energy;
+	//double ms = 1e-3;		// scalar mass 1 eV
+	//double ms2 = ms*ms;
+	double Bm = 1e3;		// cham matter coupling
+	n = 1;					// cham model n
+	double w1, w2 = 0;
+	double r1, r2 = rSolar;
+	for( int j = wp.size()-1; j >=0; j-- ){
+		w1 = wp[j];
+		if(w2 > w1) { continue; }
+		else{
+		r1 = r[j];
+		energy.push_back(w1);
+		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) /(4*pi*dSolar*dSolar) );
+		r2 = r[j];
+		w2 = wp[j];
+		}
+	}
+	// write to file
+	string name = "data/primakoffV3_L-spectrum_cham_1e3.dat";
 	write2D( name , energy, count );
 }
 
@@ -242,7 +254,8 @@ void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
 	double dw = 1e1;
-	for( double Bm = 1e0; Bm < 1e8; Bm*=1.1 ) {
+	n = 1;
+	for( double Bm = 1e0; Bm <= 1e10; Bm*=1.1 ) {
 		double total = 0;
 		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
@@ -253,7 +266,7 @@ void Eloss() {
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/primakoff_Eloss_1e3.dat";
+	string name = "data/primakoff_Eloss_n1.dat";
 	write2D( name , mass, Q );
 }
 
