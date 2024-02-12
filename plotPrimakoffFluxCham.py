@@ -33,7 +33,9 @@ dat = loadtxt("data/primakoffV3_spectrum_cham_1e3.dat")
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label="T")
 
 dat = loadtxt("data/primakoffV3_L-spectrum_cham_1e3.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label="L")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='orange', label="L")
+plt.vlines(dat[-1,0]/1e3,1e-99,dat[-1,1],color='orange')
+print(dat[-1,0]/1e3)
 
 #dat = loadtxt("data/primakoffV3_spectrum_n4_1e3.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label="n=4")
