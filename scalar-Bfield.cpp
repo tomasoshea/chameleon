@@ -119,7 +119,7 @@ double integrand( int c, double Bm, double w, double G ) {
 	//if( core==1 ) { cout<<B<<endl; }
 	//double Gboost = boostedGamma(c,G,kgamma,kphi);
 
-	return 1/(2*pi*pi*Mpl*Mpl) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
+	return 1/(pi*Mpl*Mpl) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
 			* G/(exp(w/T[c]) - 1);	// [eV Bg-2]
 }
 
