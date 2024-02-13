@@ -142,6 +142,7 @@ double L_integrand( int c, double Bm, double kgamma ) {
 }
 
 // integral over solar volume, for a given scalar mass and energy
+// returns dPhi/dw Bg-2 [eV2]
 double solarIntg( double w, double Bm ) {
 	double total = 0;
 	for( int c = 0; c < r.size() - 1; c++ ) {
@@ -217,7 +218,6 @@ void spectrum() {
 		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
-
 	}
 	// write to file
 	string name = "data/primakoffV3_spectrum_cham_1e3.dat";
@@ -248,6 +248,39 @@ void L_spectrum() {
 	write2D( name , energy, count );
 }
 
+
+// get combined LT spectrum
+void total_spectrum() {
+	vector<double> count, energy;
+	double Bm = 1e3;		// cham matter coupling
+	n = 1;					// cham model n
+	double w1, w2 = 0;
+	double r1, r2 = rSolar;
+	double dw = 1e0;
+	for( int j = wp.size()-1; j >=0; j-- ){
+		w1 = wp[j];
+		if(w2 > w1) { continue; }
+		else{
+		r1 = r[j];
+		energy.push_back(w1);
+		count.push_back( ( kIntg(Bm, j) * abs((r2-r1)/(w2-w1))	// L
+						+ solarIntg(w1,Bm) ) /(4*pi*dSolar*dSolar));					// T
+		r2 = r[j];
+		w2 = wp[j];
+		}
+	}
+	for( double w = w1+dw; w < 2e4; w+=dw ){
+		energy.push_back(w);
+		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
+		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
+	}
+	// write to file
+	string name = "data/primakoffV3_total-spectrum_cham_1e3.dat";
+	write2D( name , energy, count );
+}
+
+
 // calculate energy loss as a function of m
 // units eV2 Bm-2
 void Eloss() {
@@ -257,6 +290,23 @@ void Eloss() {
 	n = 1;
 	for( double Bm = 1e0; Bm <= 1e10; Bm*=1.1 ) {
 		double total = 0;
+		for( int j = wp.size()-1; j >=0; j-- ){
+			w1 = wp[j];
+			if(w2 > w1) { continue; }
+			else{
+			r1 = r[j];
+			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
+								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
+			r2 = r[j];
+			w2 = wp[j];
+			}
+		}
+		for( double w = w1+dw; w < 2e4; w+=dw ){
+			energy.push_back(w);
+			count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
+			if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+			//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
+		}
 		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
 		}
@@ -278,7 +328,7 @@ int main() {
 	*/
 	
 	//profile();
-	L_spectrum();
+	total_spectrum();
 	//Eloss();
 	return 0;
 	}

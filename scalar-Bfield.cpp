@@ -105,7 +105,7 @@ double boostedGamma( int c, double G, double kgamma, double kphi ) {
 
 
 // differential scalar production rate d2N/dr/dw times Lambda2
-// units Lambda2
+// units eV Bg-2
 double integrand( int c, double Bm, double w, double G ) {
 	if( T[c]==0 ) { return 0; }					// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2 [eV2]
@@ -117,10 +117,10 @@ double integrand( int c, double Bm, double w, double G ) {
 	double kphi = sqrt(w*w - ms2);				// scalar momentum [eV]
 	double B = Bfield(c);						// solar B field [eV2]
 	//if( core==1 ) { cout<<B<<endl; }
-	double Gboost = boostedGamma(c,G,kgamma,kphi);
+	//double Gboost = boostedGamma(c,G,kgamma,kphi);
 
 	return 1/(2*pi*pi*Mpl*Mpl) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
-			* Gboost/(exp(w/T[c]) - 1);	// [eV Bg-2]
+			* G/(exp(w/T[c]) - 1);	// [eV Bg-2]
 }
 
 
@@ -222,12 +222,12 @@ void spectrum() {
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
 		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
-		if( (int)w % (int)(10*dw) == 0 ) {
+		if( (int)(w) % (int)(1e3) == 0 ) {
 		cout << "w = "<<w/1e3<<"keV (of 20keV)" << endl;
 		}
 	}
 	// write to file
-	string name = "data/scalarB_spectrum_fixed_1e3.dat";
+	string name = "data/scalarB_spectrum_cham_1e3.dat";
 	write2D( name , energy, count );
 }
 
@@ -238,7 +238,7 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//profile();
-	//spectrum();
-	Eloss();
+	spectrum();
+	//Eloss();
 	return 0;
 }

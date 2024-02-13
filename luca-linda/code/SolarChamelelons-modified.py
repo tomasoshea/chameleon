@@ -94,7 +94,9 @@ def BSun(x, ccos):
 ## Define the location of the files containing the solar model data
 ## From Serenelli et al. 2009 - arxiv:0909.2668
 ## Model from Vinyoles et al. 2016 - arxiv:1611.09867
-agss09 = '../data/struct_b16_agss09.dat'
+abs_path = r"luca-linda/"
+agss09 = "luca-linda\data\struct_b16_agss09.dat"
+
 
 ## Read the solar model data
 df = pd.read_csv(agss09, delim_whitespace=True, skiprows=9, header=None)
@@ -345,7 +347,7 @@ if gridresults==1:
 plotres=1
 if plotres==1:
   omp = np.geomspace(0.01, 20, 100)
-  mu1 = omp*profnonres(omp, 1.e6, 1.e10, 1)*(RSun/ASun)**2
+  mu1 = omp*profnonres(omp, 1.e3, 1, 1)*(RSun/ASun)**2
 #  mu2 = profnonres(omp, 1.e8, 1.e10, 1)*(RSun/ASun)**2
   plt.plot(omp, mu1, 'r-')
   plt.xlabel(r"$\omega$ [keV]")
@@ -356,7 +358,12 @@ if plotres==1:
 #  plt.xlim((0.01, 30))
 #  plt.ylim((1.e2, 1.e8))
   savedat=np.array([omp,mu1]).swapaxes(0,1)
-  np.savetxt('../data/plotres.csv', savedat, delimiter=',')
+  savedat_name = abs_path+"data/plotres_1e3.dat"
+  np.savetxt(savedat_name, savedat, delimiter=',')
+  print("saved file: " + savedat_name)
+  savefig_name = abs_path+"plots/plotres_1e3.jpg"
+  plt.savefig(savefig_name)
+  print("saved file: "+savefig_name)
   plt.show()
   exit()
 

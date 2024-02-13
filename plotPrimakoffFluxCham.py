@@ -13,8 +13,15 @@ plt.style.use("style.txt")	# import plot style
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax2.set(xlim=(1e-3,20), ylim=(1e12, 1e22))
-ax2.set(xlim=(1e-3,2e1), ylim=(1e-42, 1e-33))
+ax2.set(xlim=(1e-2,2e1), ylim=(1e-40, 2e-32))
 Mpl = 2e27		# Planck mass [eV]
+
+s2eV = (6.582119569e-16)#	// Hz to eV
+J2eV = (1. / 1.602176634e-19)#	// Joules to eV (1 / e)
+m2eV = (1.973269804e-7)#	// m-1 to eV
+K2eV = (8.617333262e-5)#	// Kelvin to eV
+kg2eV = 5.609588604e35#	// from hbar/c2
+T2eV = 2e-16 * 1e18#		// Tesla to eV2 conversion [eV2/T]
 
 
 # Primakoff
@@ -30,12 +37,25 @@ Mpl = 2e27		# Planck mass [eV]
 #ax2.plot(dat[:,0]/1e3,dat[:,1]/(16*Mpl**2), ls='-', label='T-plasmon')
 
 dat = loadtxt("data/primakoffV3_spectrum_cham_1e3.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', label="T")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--', label="Primakoff T")
 
 dat = loadtxt("data/primakoffV3_L-spectrum_cham_1e3.dat")
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='orange', label="L")
-plt.vlines(dat[-1,0]/1e3,1e-99,dat[-1,1],color='orange')
-print(dat[-1,0]/1e3)
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="Primakoff L")
+plt.vlines(dat[-1,0]/1e3,1e-99,dat[-1,1],color='r')
+
+# total
+#dat = loadtxt("data/primakoffV3_total-spectrum_cham_1e3.dat")
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.',lw='2',color='k', label="combined")
+
+# B-field
+dat = loadtxt("data/scalarB_spectrum_cham_1e3.dat")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B-field')
+
+# luca-linda
+dat = loadtxt("luca-linda/data/plotres_1e3.dat", delimiter=',')	# w [keV], dPhi/dw [cm-2 s-1 keV-1]
+dat[:,1] = dat[:,1]*1e4*m2eV*m2eV*s2eV/1e3
+ax2.plot(dat[:,0],dat[:,1], ls=':', label="Luca/Linda")
+
 
 #dat = loadtxt("data/primakoffV3_spectrum_n4_1e3.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label="n=4")
@@ -99,5 +119,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/primakoffV3-LT--log.jpg')
+plt.savefig('plots/primakoffV3-LL--log.jpg')
 plt.show()
