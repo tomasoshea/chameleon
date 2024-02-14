@@ -91,6 +91,28 @@ double Bfield( int c ) {
 	else { return 0; }
 }
 
+
+// Luca/Linda conversion
+
+// Kramers formula
+double kappae(double x) {	// x = r/R0
+    double conv = 4.e25*(kB)**3.5/hbarc**3*gkeV;
+    return conv*(1.+0.7381)*(1.e-3+0.0134)*rhoSun(x)/T(x)**3.5;
+}
+
+//Klein-Nishina formula
+double kappaTh(double x) {
+    cnv1 = 2.7e11*kB**2/hbarc**3*gkeV
+    cnv2 = 4.5e8*kB
+    return 0.2*(1.+0.7381)/(1+cnv1*rhoSun(x)/T(x)**2)/(1+(T(x)/cnv2)**0.86)
+}
+
+// photon mean free path in cm
+double lam( int c ) {
+	double x = r[c]/rSolar;
+    return 1./gkeV*hbarc**3/(kappaTh(x) + kappae(x))/rhoSun(x)
+}
+
 // solved integral I(a)
 double IB(double a) {
 	return sqrt(pi/2)*(sqrt(a+sqrt(a*a+4)) - sqrt(2*a));
@@ -99,35 +121,13 @@ double IB(double a) {
 // Gamma boosted by Luca factor for photon scatter
 double boostedGamma( int c, double G, double kgamma, double kphi ) {
 	double q = sqrt(abs(kgamma*kgamma - kphi*kphi));
-	return G /( ngamma0*pow(r0/r[c],2)*pi/4/zeta3*pow(T[c],-3)
+	return G *( ngamma0*pow(r0/r[c],2)*pi/4/zeta3*pow(T[c],-3)
 			*sqrt(q/2/m2eV) * IB(2*G/q) );
 }
 
-
-// differential scalar production rate d2N/dr/dw times Lambda2
-// units eV Bg-2
-double integrand( int c, double Bm, double w, double G ) {
-	if( T[c]==0 ) { return 0; }					// solves weird behaviour when ne = T = 0
-	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2 [eV2]
-	double ms2 = mCham2(c,Bm);					// chameleon mass2 [eV2]
-	//double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
-	if( w*w <= mg2 ) { return 0; }
-	if( w*w <= ms2 ) { return 0; }
-	double kgamma = sqrt(w*w - mg2);			// photon momentum [eV]
-	double kphi = sqrt(w*w - ms2);				// scalar momentum [eV]
-	double B = Bfield(c);						// solar B field [eV2]
-	//if( core==1 ) { cout<<B<<endl; }
-	//double Gboost = boostedGamma(c,G,kgamma,kphi);
-
-	return 1/(pi*Mpl*Mpl) * pow(r[c], 2) *B*B * w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
-			* G/(exp(w/T[c]) - 1);	// [eV Bg-2]
-}
-
-
-// integral over solar volume, for a given scalar mass and energy
-double solarIntg( double w, double Bm ) {
-	double total = 0;
-	for( int c = 0; c < r.size() - 1; c++ ) {
+// selects Gaunt factor from matrix for Gamma
+// returns Gamma [eV]
+double selectG( int c, double w ) {
 		// select g(w, T) value from matrix
 		int indexT1;
 		int indexT2;
@@ -143,9 +143,36 @@ double solarIntg( double w, double Bm ) {
 		}
 		double g1 = z1[ indexT1 ][ indexX1 ];
 		double g2 = z2[ indexT2 ][ indexX2 ];
-		double G = GammaPhoton(w, c, g1, g2);
+		return GammaPhoton(w, c, g1, g2);
+}
 
-		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1, Bm, w, G) + integrand(c, Bm, w, G));
+// differential scalar production rate d2N/dr/dw times Lambda2
+// units eV Bg-2
+double integrand( int c, double Bm, double w ) {
+	if( T[c]==0 ) { return 0; }					// solves weird behaviour when ne = T = 0
+	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2 [eV2]
+	double ms2 = mCham2(c,Bm);					// chameleon mass2 [eV2]
+	//double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
+	if( w*w <= mg2 ) { return 0; }
+	if( w*w <= ms2 ) { return 0; }
+	double kgamma = sqrt(w*w - mg2);			// photon momentum [eV]
+	double kphi = sqrt(w*w - ms2);				// scalar momentum [eV]
+	double B = Bfield(c);						// solar B field [eV2]
+	double G = selectG(c,w);
+	//if( core==1 ) { cout<<B<<endl; }
+	//double Gboost = boostedGamma(c,G,kgamma,kphi);
+
+	return 2/(pi*Mpl*Mpl) * pow(r[c], 2) * B*B 
+			* w*pow(w*w - ms2, 3/2)/( pow(ms2 - mg2, 2) + (w*w*G*G) )
+			* G/(exp(w/T[c]) - 1);	// [eV Bg-2]
+}
+
+
+// integral over solar volume, for a given scalar mass and energy
+double solarIntg( double w, double Bm ) {
+	double total = 0;
+	for( int c = 0; c < r.size() - 1; c++ ) {
+		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1, Bm, w) + integrand(c, Bm, w));
 		if(r[c+1] < r[c]) { cout<<r[c+1]<<"	"<<r[c]<<"	"<<c<<endl; }
 	}
 	return total;
@@ -162,25 +189,8 @@ void profile() {
 	double dw = 10;		// [eV]
 	for( int c = 0; c < r.size(); c++ ) {
 		double total = 0;
-		// select g(w, T) value from matrix
-		int indexT1;
-		int indexT2;
-		for( int i = 1; i < 200; i++ ) {
-			if( z1[0][i] < T[c] and z1[0][i+1] > T[c] ) { indexT1 = i; }
-			if( z2[0][i] < T[c] and z2[0][i+1] > T[c] ) { indexT2 = i; }
-		}
 		for( double w = dw; w < 2e4; w+=dw ) {
-			int indexX1;
-			int indexX2;
-			for( int i = 1; i < 500; i++ ) {
-				if( (z1[i][0] * T[c]) < w and (z1[i+1][0] * T[c]) > w ) { indexX1 = i; }
-				if( (z2[i][0] * T[c]) < w and (z2[i+1][0] * T[c]) > w ) { indexX2 = i; }
-			}
-			double g1 = z1[ indexT1 ][ indexX1 ];
-			double g2 = z2[ indexT2 ][ indexX2 ];
-			double G = GammaPhoton(w, c, g1, g2);
-
-			total += 0.5*dw*( integrand(c,Bm,w*mw,G) + integrand(c,Bm,w,G) );
+			total += 0.5*dw*( integrand(c,Bm,w*mw) + integrand(c,Bm,w) );
 		}
 		//if( r[c] <= r0 ) { cout<<total<<endl;}
 		radius.push_back(r[c]);
@@ -218,7 +228,7 @@ void Eloss() {
 void spectrum() {
 	vector<double> count, energy;
 	double Bm = 1e3;		// cham matter coupling, or fixed scalar mass
-	double dw = 1e0;
+	double dw = 1e2;
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
 		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
@@ -227,7 +237,7 @@ void spectrum() {
 		}
 	}
 	// write to file
-	string name = "data/scalarB_spectrum_cham_1e3.dat";
+	string name = "data/scalarB_spectrum_cham_1e3--test.dat";
 	write2D( name , energy, count );
 }
 

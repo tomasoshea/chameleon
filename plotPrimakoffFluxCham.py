@@ -12,10 +12,9 @@ plt.style.use("style.txt")	# import plot style
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
-#ax2.set(xlim=(1e-3,20), ylim=(1e12, 1e22))
 ax2.set(xlim=(1e-2,2e1), ylim=(1e-40, 2e-32))
-Mpl = 2e27		# Planck mass [eV]
 
+Mpl = 2e27		# Planck mass [eV]
 s2eV = (6.582119569e-16)#	// Hz to eV
 J2eV = (1. / 1.602176634e-19)#	// Joules to eV (1 / e)
 m2eV = (1.973269804e-7)#	// m-1 to eV
@@ -48,7 +47,7 @@ plt.vlines(dat[-1,0]/1e3,1e-99,dat[-1,1],color='r')
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.',lw='2',color='k', label="combined")
 
 # B-field
-dat = loadtxt("data/scalarB_spectrum_cham_1e3.dat")
+dat = loadtxt("data/scalarB_spectrum_cham_1e3--test.dat")
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B-field')
 
 # luca-linda
@@ -119,5 +118,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/primakoffV3-LL--log.jpg')
+plt.savefig('plots/primakoffV3-LL--log--test.jpg')
 plt.show()
