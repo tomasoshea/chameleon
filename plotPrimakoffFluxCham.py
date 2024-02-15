@@ -53,8 +53,12 @@ ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B-field')
 # luca-linda
 dat = loadtxt("luca-linda/data/plotres_1e3.dat", delimiter=',')	# w [keV], dPhi/dw [cm-2 s-1 keV-1]
 dat[:,1] = dat[:,1]*1e4*m2eV*m2eV*s2eV/1e3
-ax2.plot(dat[:,0],dat[:,1], ls=':', label="Luca/Linda")
+ax2.plot(dat[:,0],dat[:,1], ls=':', label="Luca/Linda 1")
 
+# luca-linda
+dat = loadtxt("luca-linda/data/plotnonres_1e3.dat", delimiter=',')	# w [keV], dPhi/dw [cm-2 s-1 keV-1]
+dat[:,1] = dat[:,1]*1e4*m2eV*m2eV*s2eV/1e3
+ax2.plot(dat[:,0],dat[:,1], ls=':', label="Luca/Linda 2")
 
 #dat = loadtxt("data/primakoffV3_spectrum_n4_1e3.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label="n=4")

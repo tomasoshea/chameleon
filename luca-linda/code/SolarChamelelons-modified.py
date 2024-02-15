@@ -344,7 +344,7 @@ if gridresults==1:
 #print(profnonres(1, 1.e7, 1.e10, 1))
 #exit()
 
-plotres=1
+plotres=0
 if plotres==1:
   omp = np.geomspace(0.01, 20, 100)
   mu1 = omp*profnonres(omp, 1.e3, 1, 1)*(RSun/ASun)**2
@@ -420,14 +420,22 @@ plotres=1
 if plotres==1:
   omp = np.linspace(-1, 1.5, 100)
   omp = 10.**omp
-  mu1 = profnonres(omp, 1.e6, 1.e10, 1)
-  mu2 = profnonres(omp, 1.e7, 1.e10, 1)
-  mu3 = profnonres(omp, 1.e8, 1.e10, 1)
-  mu4 = profnonres(omp, 1.e9, 1.e10, 1)
+  print("ello")
+  mu1 = profnonres(omp, 1.e3, 1.e0, 1)
+  savedat=np.array([omp,mu1]).swapaxes(0,1)
+  savedat_name = abs_path+"data/plotnonres_1e3.dat"
+  np.savetxt(savedat_name, savedat, delimiter=',')
+  print("saved file: " + savedat_name)
+  #print("ello2")
+  #mu2 = profnonres(omp, 1.e7, 1.e10, 1)
+  #print("ello3")
+  #mu3 = profnonres(omp, 1.e8, 1.e10, 1)
+  #print("ello4")
+  #mu4 = profnonres(omp, 1.e9, 1.e10, 1)
   plt.plot(omp, mu1, 'r-')
-  plt.plot(omp, mu2, 'b-')
-  plt.plot(omp, mu3, 'm-')
-  plt.plot(omp, mu4, 'g-')
+  #plt.plot(omp, mu2, 'b-')
+  #plt.plot(omp, mu3, 'm-')
+  #plt.plot(omp, mu4, 'g-')
   plt.xscale('log')
   plt.yscale('log')
   plt.show()
