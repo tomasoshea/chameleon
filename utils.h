@@ -136,3 +136,37 @@ vector<vector<double>> readGaunt( string name ) {
 	
 	else{ cout << "couldn't find file: " << name << endl ; vector<vector<double>> err = {{69.}} ; return err ; }
 }
+
+// write big matrices
+void writeREST( string name, vector<double> data, int line ){	// data vector needs values of w for constant r
+
+	//int piece = 0;	// for newlining
+	int len = data.size();
+	//cout<<len<<endl;
+
+	// delete old file if extant
+	if ( line == 0 ) {
+	if ( remove(name.c_str()) == 0 ) {
+		cout << "file " << name << " deleted." << endl;
+		}
+	}
+
+	// file pointer
+	fstream fout;
+
+	// creates new csv file
+	fout.open(name, ios::out | ios::app);
+
+	// Read the input from vector
+	int c = 0;
+	for ( double item : data ) {
+		// Insert the data to file
+		//cout<<item<<endl;
+		fout << item;
+		if(c == len-1) { fout<<endl; break; }
+		else { fout << "	"; c++; }
+	}
+	if( line == 0 ){ cout << "writing to file " << name << "...\n" << endl; }
+	
+	fout.close();
+}

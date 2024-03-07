@@ -13,3 +13,6 @@
 *.pptx
 *.ppt
 *.odt
+
+# ignore massive contour files
+data/*contour*

@@ -1,4 +1,4 @@
-// Tom O'Shea 2023
+// Tom O'Shea 2024
 
 // Primakoff production of scalars in the sun
 // V3 - the one using full ee scatter with full disp. rel. but no Raffelt screening=
@@ -38,7 +38,7 @@ vector<vector<double>> z2 = readGaunt("data/Z2.dat");	// gaunt factors for Z=2
 // cham model params n (phi-n potential), Bm (matter coupling)
 // assume rho dominated by matter density
 double mCham2( int c, double Bm ) {
-	if(n==0) { cout<<"ERROR! n = 0"<<endl; return 0; }
+	if(n<1) { cout<<"ERROR! n < 1"<<endl; return 0; }
 	double E4n = pow(E,4+n);
 	return n*(n+1)*E4n*pow( Bm*rho[c]/(n*Mpl*E4n), (n+2)/(n+1) );
 }
@@ -115,8 +115,8 @@ double integrand( int c, double Bm, double w, double Ggamma ) {
 	//if( aArg/bArg < 1e3 ) { Aab = curlyA(aArg,bArg); }
 	//if(aArg < 1.01) { Aab = curlyIapprox(aArg,bArg); }
 
-	return alpha/(18*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
-			* w*w*w * kphi/kgamma/kgamma * Iuv;		// [eV Bg^-2]
+	return alpha/(8*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
+			* w*w * kphi/kgamma * Iuv;		// [eV Bg^-2]
 }
 
 
@@ -173,7 +173,7 @@ double solarIntg( double w, double Bm ) {
 double kIntg( double Bm, int c ) {
 	double total = 0;
 	double kD = sqrt(8*pi*alpha*ne[c]/T[c]);
-	double dk = kD/100;
+	double dk = kD/1000;
 	for( double k = dk; k < kD; k+= dk ) {
 		//cout << k << endl;
 		total += 0.5 * dk * (L_integrand(c+1, Bm, k) + L_integrand(c, Bm, k));
@@ -182,45 +182,61 @@ double kIntg( double Bm, int c ) {
 }
 
 
-/*
 // calculate emission rate profile over solar radius (dN/dr)
 // integrated over relevant energies up to 20 keV
 void profile() {
 	vector<double> radius;
 	vector<double> rate;
-	double Bm = 1e6;
-	double mw = 1.1;
-	double dw = 1;		// [eV]
+	double Bm = 1e2;		// cham matter coupling
+	n = 1;					// cham model n
+	double dw = 1e0;
 	for( int c = 0; c < r.size(); c++ ) {
 		double total = 0;
-		for( double w = dw; w < 2e4; w+=dw ) {
-			total += 0.5*dw*( integrand(c,Bm,w*mw) + integrand(c,Bm,w) );
+		for( double w = dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( integrand(c,Bm,w+dw,0) + integrand(c,Bm,w,0) );
 		}
 		radius.push_back(r[c]);
 		rate.push_back(total);
 	}
 	// write to file
-	string name = "data/primakoff_profile_1e3.dat";
+	string name = "data/primakoffV3_profile_1e2.dat";
 	write2D( name , radius, rate );
 }
-*/
+
+void L_profile() {
+	vector<double> radius, rate;
+	//double ms = 1e-3;		// scalar mass 1 eV
+	//double ms2 = ms*ms;
+	double Bm = 1e2;		// cham matter coupling
+	n = 1;					// cham model n
+	for( int c = 0; c < r.size(); c++ ) {
+		radius.push_back(r[c]);
+		rate.push_back( kIntg(Bm, c) );
+	}
+	// write to file
+	string name = "data/primakoffV3_L_profile_1e2.dat";
+	write2D( name , radius, rate );
+}
+
 
 // calculate differential particle flux spectrum by intg over solar volume
+// dN/dw, units Bg-2
+// (where dN is really dN/dt, sorry)
 void spectrum() {
 	vector<double> count, energy;
 	//double ms = 1e-3;		// scalar mass 1 eV
 	//double ms2 = ms*ms;
-	double Bm = 1e3;		// cham matter coupling
+	double Bm = 1e2;		// cham matter coupling
 	n = 1;					// cham model n
 	double dw = 1e0;
 	for( double w = dw; w < 2e4; w+=dw ){
-		energy.push_back(w);
-		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
+		energy.push_back(w);					// eV
+		count.push_back( solarIntg(w,Bm) );		// Bg-2
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
 	}
 	// write to file
-	string name = "data/primakoffV3_spectrum_cham_1e3.dat";
+	string name = "data/primakoffV3_spectrum_1e2.dat";
 	write2D( name , energy, count );
 }
 
@@ -228,7 +244,7 @@ void L_spectrum() {
 	vector<double> count, energy;
 	//double ms = 1e-3;		// scalar mass 1 eV
 	//double ms2 = ms*ms;
-	double Bm = 1e3;		// cham matter coupling
+	double Bm = 1e2;		// cham matter coupling
 	n = 1;					// cham model n
 	double w1, w2 = 0;
 	double r1, r2 = rSolar;
@@ -238,13 +254,13 @@ void L_spectrum() {
 		else{
 		r1 = r[j];
 		energy.push_back(w1);
-		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) /(4*pi*dSolar*dSolar) );
+		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) );
 		r2 = r[j];
 		w2 = wp[j];
 		}
 	}
 	// write to file
-	string name = "data/primakoffV3_L-spectrum_cham_1e3.dat";
+	string name = "data/primakoffV3_L_spectrum_1e2.dat";
 	write2D( name , energy, count );
 }
 
@@ -280,7 +296,7 @@ void total_spectrum() {
 	write2D( name , energy, count );
 }
 
-
+/*
 // calculate energy loss as a function of m
 // units eV2 Bm-2
 void Eloss() {
@@ -319,7 +335,62 @@ void Eloss() {
 	string name = "data/primakoff_Eloss_n1.dat";
 	write2D( name , mass, Q );
 }
+*/
 
+// data for contour plot of w & r
+// down columns: r[c] over whole range
+// right along rows: w from 0.1 to 20 keV
+// ie. dat[r,w]
+void contour() {
+	vector<double> flux, rOut, wOut;
+	double dw = 1e0;
+	n = 1;
+	double Bm = 1e2;
+	string name = "data/primakoff_contour_1e2.dat";
+	for( int c = 0; c < r.size(); c++ ) {
+		rOut.push_back(r[c]/rSolar);
+		for( double w = dw; w <= 2e4; w+=dw ) {
+			flux.push_back(integrand(c,Bm,w,0));
+			//cout << integrand(c,Bm,w,0) << endl;
+			if(c==0) { wOut.push_back(w); }
+		}
+		writeREST( name, flux, c );
+		//cout<<"line "<<c<<" written!"<<endl;
+		flux.clear();
+	}
+	write2D("data/rFrac_T_contour.dat",rOut,rOut);
+	write2D("data/w_T_contour.dat",wOut,wOut);
+	cout<<"\acompleted it mate"<<endl;
+}
+
+void L_contour() {
+	vector<double> flux, rOut, wOut;
+	double dw = 1e0;
+	n = 1;
+	double Bm = 1e2;
+	string name = "data/primakoff_L_contour_1e2.dat";
+	for( int c = 0; c < r.size(); c++ ) {
+		rOut.push_back(r[c]/rSolar);
+		for( double w = dw; w <= 2e4; w+=dw ) {
+			if(w<wp[c+1] or w>wp[c]) { flux.push_back(0); }
+			else if( c == r.size()-1 ) { flux.push_back(0); }
+			else{ 
+				double dr = abs(r[c+1] - r[c]);
+				double dw = abs(wp[c+1] - wp[c]);
+				double total = 0.5*dr*(kIntg(Bm,c+1) + kIntg(Bm,c));
+				flux.push_back(total/dr/dw);
+				//cout<<total<<endl;
+			}
+			if(c==0) { wOut.push_back(w); }
+		}
+		writeREST( name, flux, c );
+		if(c % (int)(1e2) == 0) { cout<<"line "<<c<<" (of "<<r.size()-1<<") written!"<<endl; }
+		flux.clear();
+	}
+	write2D("data/rFrac_L_contour.dat",rOut,rOut);
+	write2D("data/w_L_contour.dat",wOut,wOut);
+	cout<<"\acompleted it mate"<<endl;
+}
 
 int main() { 
 	/*// convert Gaunt factor Theta to T in eV
@@ -327,8 +398,9 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 	*/
 	
-	//profile();
-	total_spectrum();
+	//L_profile();
+	spectrum();
 	//Eloss();
+	//contour();
 	return 0;
 	}

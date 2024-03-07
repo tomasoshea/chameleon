@@ -91,7 +91,7 @@ double Bfield( int c ) {
 	else { return 0; }
 }
 
-
+/*
 // Luca/Linda conversion
 
 // Kramers formula
@@ -124,6 +124,8 @@ double boostedGamma( int c, double G, double kgamma, double kphi ) {
 	return G *( ngamma0*pow(r0/r[c],2)*pi/4/zeta3*pow(T[c],-3)
 			*sqrt(q/2/m2eV) * IB(2*G/q) );
 }
+*/
+
 
 // selects Gaunt factor from matrix for Gamma
 // returns Gamma [eV]
@@ -184,20 +186,20 @@ double solarIntg( double w, double Bm ) {
 void profile() {
 	vector<double> radius;
 	vector<double> rate;
-	double Bm = 1e3;
-	double mw = 1.1;
-	double dw = 10;		// [eV]
+	double Bm = 1e2;		// cham matter coupling
+	n = 1;					// cham model n
+	double dw = 1e0;
 	for( int c = 0; c < r.size(); c++ ) {
 		double total = 0;
-		for( double w = dw; w < 2e4; w+=dw ) {
-			total += 0.5*dw*( integrand(c,Bm,w*mw) + integrand(c,Bm,w) );
+		for( double w = dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( integrand(c,Bm,w+dw) + integrand(c,Bm,w) );
 		}
-		//if( r[c] <= r0 ) { cout<<total<<endl;}
 		radius.push_back(r[c]);
 		rate.push_back(total);
+		cout << "r = "<<r[c]/rSolar<<" R_solar" << endl;
 	}
 	// write to file
-	string name = "data/scalarB_profile_cham-1e3.dat";
+	string name = "data/scalarB_profile_1e2.dat";
 	write2D( name , radius, rate );
 }
 
@@ -219,26 +221,54 @@ void Eloss() {
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/scalarB_Eloss_cham_1e3--boost.dat";
+	string name = "data/scalarB_Eloss_cham.dat";
 	write2D( name , mass, Q );
 }
 
 
-// calculate differential particle flux spectrum by intg over solar volume
+// calculate differential emission rate spectrum by intg over solar volume
+// dN/dw, units Bg-2
 void spectrum() {
 	vector<double> count, energy;
-	double Bm = 1e3;		// cham matter coupling, or fixed scalar mass
-	double dw = 1e2;
+	double Bm = 1e2;		// cham matter coupling, or fixed scalar mass
+	double dw = 1e0;
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
-		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
+		count.push_back( solarIntg(w,Bm) );
 		if( (int)(w) % (int)(1e3) == 0 ) {
 		cout << "w = "<<w/1e3<<"keV (of 20keV)" << endl;
 		}
 	}
 	// write to file
-	string name = "data/scalarB_spectrum_cham_1e3--test.dat";
+	string name = "data/scalarB_spectrum_1e2.dat";
 	write2D( name , energy, count );
+}
+
+
+// data for contour plot of w & r
+// down columns: r[c] over whole range
+// right along rows: w from 0.1 to 20 keV
+// ie. dat[r,w]
+void contour() {
+	vector<double> flux, rOut, wOut;
+	double dw = 1e0;
+	n = 1;
+	double Bm = 1e2;
+	string name = "data/scalarB_contour_1e2.dat";
+	for( int c = 0; c < r.size(); c++ ) {
+		rOut.push_back(r[c]/rSolar);
+		for( double w = dw; w <= 2e4; w+=dw ) {
+			flux.push_back(integrand(c,Bm,w));
+			//cout << integrand(c,Bm,w,0) << endl;
+			if(c==0) { wOut.push_back(w); }
+		}
+		writeREST( name, flux, c );
+		if(c % (int)(1e1) == 0) { cout<<"line "<<c<<" (of "<<r.size()-1<<") written!"<<endl; }
+		flux.clear();
+	}
+	write2D("data/rFrac_B_contour.dat",rOut,rOut);
+	write2D("data/w_B_contour.dat",wOut,wOut);
+	cout<<"\acompleted it mate"<<endl;
 }
 
 
@@ -248,7 +278,8 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//profile();
-	spectrum();
+	//spectrum();
 	//Eloss();
+	contour();
 	return 0;
 }
