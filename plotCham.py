@@ -5,6 +5,14 @@ from numpy import *
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 
+# constants
+Mpl = 2e27		# Planck mass [eV]
+Lsolar = 3.0128e28		# Solar luminosity [W]
+s2eV = (6.582119569e-16)#	// Hz to eV
+J2eV = (1. / 1.602176634e-19)#	// Joules to eV (1 / e)
+Lsolar *= J2eV*s2eV
+
+
 # average function
 def avg(array1, array2, cutoff):
     total = 0
@@ -18,8 +26,10 @@ def avg(array1, array2, cutoff):
 
 # setup plot
 plt.style.use("style.txt")	# import plot style
+#fig, (ax1,ax2) = plt.subplots(1, 2)	# display is 1920 x 1080 (16:9)
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
+#ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
 ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
 
 # add IAXO bits
@@ -28,36 +38,68 @@ path = "data/limits/chamstats"
 # loop over n values
 #for n in range(1,11):
 #	dat = loadtxt("{}-babyIAXO{}-tPlasmon.dat".format(path, n))
-#	ax2.plot(dat[:,0],dat[:,1], label='n = {}'.format(n))
+#	ax1.plot(dat[:,0],dat[:,1], label='n = {}'.format(n))
 #	print("babyIAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-dat = loadtxt("{}-babyIAXO1-tPlasmon.dat".format(path))
-ax2.plot(dat[:,0],dat[:,1], color='magenta', ls='-.', label='baby IAXO')
-print("baby IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+#dat = loadtxt("{}-babyIAXO1-tPlasmon.dat".format(path))
+#ax1.plot(dat[:,0],dat[:,1], color='magenta', ls='-.', label='baby IAXO')
+#print("baby IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-dat = loadtxt("{}-baselineIAXO1-tPlasmon.dat".format(path))
-ax2.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
-print("baseline IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+#dat = loadtxt("{}-baselineIAXO1-tPlasmon.dat".format(path))
+#ax1.plot(dat[:,0],dat[:,1], color='cyan', ls=':', label='baseline IAXO')
+#print("baseline IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-dat = loadtxt("{}-upgradedIAXO1-tPlasmon.dat".format(path))
-ax2.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
-print("upgraded IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
+#dat = loadtxt("{}-upgradedIAXO1-tPlasmon.dat".format(path))
+#ax1.plot(dat[:,0],dat[:,1], color='green', ls='--', label='upgraded IAXO')
+#print("upgraded IAXO:	{}".format(avg(dat[:,0], dat[:,1], 1e3)))
 
-# add cast
-ax2.hlines(5.74e10 / 4, 1e0, 1e11, color='black', ls=':', label='CAST')
+########################################
+############### n=1 ####################
+########################################
+"""
+dat = loadtxt("data/primakoff_total_Eloss_n1.dat")
+Bg = sqrt(Lsolar*3/100/dat[:,1])
+ax1.plot(dat[:,0],Bg, ls='-',color='r', label='Solar energy loss')
+
+# add CAST
+ax1.hlines(5.74e10 / 4, 1e0, 1e11, color='black', ls='-', label='CAST')
 
 # add other limits
-ax2.add_patch( Rectangle( (2e1, 1e8), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance (n=1)') )
-ax2.add_patch( Rectangle( (3e2, 1e8), 1e11, 1e12, color='b', alpha=0.4, label='Atom interferometry (n=1)') )
-ax2.add_patch( Rectangle( (1e0, 1e9), 1e11, 1e12, color='g', alpha=0.4, label='Astronomical polarisation') )
-
+ax1.add_patch( Rectangle( (2e1, 1e7), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )
+ax1.add_patch( Rectangle( (3e2, 1e7), 1e11, 1e12, color='b', alpha=0.4, label='Atom interferometry') )
+ax1.add_patch( Rectangle( (5.88, 1e7), 619, 1e12, color='g', alpha=0.4, label='Levitated force sensor') )
 
 # axes
-ax2.set_xlabel("Matter coupling, Bm")
-ax2.set_ylabel("Photon coupling, Bg")
+ax1.set_xlabel(r'Matter coupling $\beta_m$')
+ax1.set_ylabel(r'Photon coupling $\beta_\gamma$')
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+#ax1.legend()
+"""
+
+########################################
+############### n=4 ####################
+########################################
+
+dat = loadtxt("data/primakoff_total_Eloss_n4.dat")
+Bg = sqrt(Lsolar*3/100/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls='-',color='r', label='Solar energy loss')
+
+# add CAST
+ax2.hlines(5.74e10 / 4, 1e0, 1e11, color='black', ls='-', label='CAST')
+
+# add other limits
+ax2.add_patch( Rectangle( (1e1, 1e7), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )
+ax2.add_patch( Rectangle( (3e3, 1e7), 1e11, 1e12, color='b', alpha=0.4, label='Atom interferometry') )
+#ax2.add_patch( Rectangle( (3e1, 1e7), 7e1, 1e12, color='g', alpha=0.4, label='Levitated force sensor') )
+ax2.add_patch( Rectangle( (3e100, 1e7), 7e1, 1e12, color='g', alpha=0.4, label='Levitated force sensor') )
+
+# axes
+ax2.set_xlabel(r'Matter coupling $\beta_m$')
+ax2.set_ylabel(r'Photon coupling $\beta_\gamma$')
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-ax2.legend()
+ax2.legend(loc='lower right')
 
-plt.savefig('plots/chamLimits.jpg')
+plt.savefig('plots/chamLimits_Eloss_n4--2.jpg')
 plt.show()

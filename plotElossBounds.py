@@ -23,9 +23,9 @@ Lsolar *= J2eV*s2eV
 
 # Primakoff
 
-dat = loadtxt("data/primakoff_Eloss_1e3.dat")
-Bg = np.sqrt(Lsolar/10/dat[:,1])
-ax2.plot(dat[:,0],Bg, ls='-', label=r'Primakoff, $\beta_m = 10^3$')
+#dat = loadtxt("data/primakoff_Eloss_1e3.dat")
+#Bg = np.sqrt(Lsolar/10/dat[:,1])
+#ax2.plot(dat[:,0],Bg, ls='-', label=r'Primakoff, $\beta_m = 10^3$')
 
 #dat = loadtxt("data/scalarB_Eloss_cham_1e3.dat")
 #Bg = np.sqrt(Lsolar/10/dat[:,1])
@@ -35,23 +35,23 @@ ax2.plot(dat[:,0],Bg, ls='-', label=r'Primakoff, $\beta_m = 10^3$')
 #Bg = np.sqrt(Lsolar/10/dat[:,1])
 #ax2.plot(dat[:,0],Bg, ls='--',label="n=10")
 
-dat = loadtxt("data/scalarB_Eloss_cham_1e3.dat")
-Bg = np.sqrt(Lsolar/10/dat[:,1])
-ax2.plot(dat[:,0],Bg, ls='--',label=r'B-field, $\beta_m = 10^3$')
+#dat = loadtxt("data/scalarB_Eloss_cham_1e3.dat")
+#Bg = np.sqrt(Lsolar/10/dat[:,1])
+#ax2.plot(dat[:,0],Bg, ls='--',label=r'B-field, $\beta_m = 10^3$')
 
-dat = loadtxt("data/scalarB_Eloss_cham_1e3--boost.dat")
+dat = loadtxt("data/primakoff_total_Eloss_Lambda.dat")
 Bg = np.sqrt(Lsolar/10/dat[:,1])
-ax2.plot(dat[:,0],Bg, ls=':',label=r'B-field (boost), $\beta_m = 10^3$')
+ax2.plot(dat[:,0],Bg, ls='-')
 
 
 
  
 # axes
-ax2.set_xlabel("Chameleon matter coupling")
+ax2.set_xlabel(r'$\Lambda$ (eV)')
 ax2.set_ylabel("Chameleon photon coupling")	#[m-2 s-1 eV-1]")
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-ax2.legend()
+#ax2.legend()
 
-plt.savefig('plots/Eloss_B.jpg')
+plt.savefig('plots/Eloss_total_Lambda.jpg')
 plt.show()

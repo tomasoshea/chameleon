@@ -175,7 +175,7 @@ double solarIntg( double w, double Bm ) {
 	double total = 0;
 	for( int c = 0; c < r.size() - 1; c++ ) {
 		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1, Bm, w) + integrand(c, Bm, w));
-		if(r[c+1] < r[c]) { cout<<r[c+1]<<"	"<<r[c]<<"	"<<c<<endl; }
+		//if(r[c+1] < r[c]) { cout<<r[c+1]<<"	"<<r[c]<<"	"<<c<<endl; }
 	}
 	return total;
 }
@@ -231,7 +231,7 @@ void Eloss() {
 void spectrum() {
 	vector<double> count, energy;
 	double Bm = 1e2;		// cham matter coupling, or fixed scalar mass
-	double dw = 1e0;
+	double dw = 1e1;
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
 		count.push_back( solarIntg(w,Bm) );
@@ -240,7 +240,7 @@ void spectrum() {
 		}
 	}
 	// write to file
-	string name = "data/scalarB_spectrum_1e2.dat";
+	string name = "data/scalarB_spectrum_1e2--coarse.dat";
 	write2D( name , energy, count );
 }
 
@@ -278,8 +278,8 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//profile();
-	//spectrum();
+	spectrum();
 	//Eloss();
-	contour();
+	//contour();
 	return 0;
 }

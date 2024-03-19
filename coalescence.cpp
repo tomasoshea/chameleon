@@ -46,7 +46,7 @@ double mCham2( int c, double Bm ) {
 
 // differential scalar production rate on earth dN/dr times Lambda2
 // units eV2 Bm-2
-double integrand_ll( int c, double Bm ) {
+double integrand_ll( int c, double Bm, double kgamma ) {
 	double Tc = T[c];
 	double rc = r[c];
 	double nec = ne[c];
@@ -56,7 +56,8 @@ double integrand_ll( int c, double Bm ) {
 	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
 	double K2 = 8*pi*alpha*nec/Tc;		// Debye screening scale ^2 [eV2]
 	if( 2*mg2 <= ms2 ) { cout<<ms2-(2*mg2)<<endl; return 0;}
-	return 1/(144*Mpl*Mpl*pi*pi) * pow(K2,3/2) * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
+	//return 1/(36*Mpl*Mpl*pi*pi) * pow(K2,3/2) * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
+	return 1/(12*Mpl*Mpl*pi*pi) * kgamma*kgamma * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
 }
 
 
@@ -70,26 +71,64 @@ double integrand_lt( int c, double Bm, double w ) {
 	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
 	if( w*w <= mg2 ) { return 0; }			// w > m_s requirement
 	if( w*w <= ms2 ) { return 0; }			// w > m_g requirement
-	if( ms2 <= mg2 ) { return 0; }
+	if( ms2 <= mg2 ) { return 0; }			// requirement for coalescence
 	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
 	double wt = w - sqrt(mg2);				// t-photon omega [eV]
 	double kphi = sqrt(w*w - ms2);			// scalar wavenumber [eV]
 	double kt = sqrt(w*(w - 2*sqrt(mg2)));	// t-photon wavenumber [eV]
 	if(w - 2*sqrt(mg2) <= 0) { return 0; }
 	//cout<<kt<<endl;
-	return rc*rc/Mpl/Mpl * wt*wt * kphi * kt * Tc/(exp(wt/Tc) - 1);
+	return 2*rc*rc/(Mpl*Mpl*12*pi*pi) * wt*wt * kphi * kt * Tc/(exp(wt/Tc) - 1);
+}
+
+
+// differential scalar production rate on earth d2N/dr/dw times Lambda2
+// units eV Bm-2
+double integrand_decay( int c, double Bm, double w ) {
+	double Tc = T[c];
+	double rc = r[c];
+	if( Tc==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
+	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
+	if( w*w <= mg2 ) { return 0; }			// w > m_s requirement
+	if( w*w <= ms2 ) { return 0; }			// w > m_g requirement
+	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
+	double wt = w + sqrt(mg2);				// t-photon omega [eV]
+	double kphi = sqrt(w*w - ms2);			// scalar wavenumber [eV]
+	double kt = sqrt(w*(w - 2*sqrt(mg2)));	// t-photon wavenumber [eV]
+	if(w - 2*sqrt(mg2) <= 0) { return 0; }
+	//cout<<kt<<endl;
+	return rc*rc/(Mpl*Mpl*12*pi*pi) * wt*wt * kphi * kt * Tc/(exp(wt/Tc) - 1);
 }
 
 // integral over solar volume, for a given scalar mass and energy
 // returns dPhi/dw Bg-2 [eV2]
-double solarIntg_lt( double w, double Bm ) {
+double solarIntg_lt( double w, double Bm, bool decay ) {
 	double total = 0;
-	for( int c = 0; c < r.size() - 1; c++ ) {
-		total += 0.5 * (r[c+1] - r[c]) * (integrand_lt(c+1, Bm, w) + integrand_lt(c, Bm, w));
+	if(decay) {
+		for( int c = 0; c < r.size() - 1; c++ ) {
+			total += 0.5 * (r[c+1] - r[c]) * (integrand_decay(c+1, Bm, w) + integrand_decay(c, Bm, w));
+		}
+	}
+	else{
+		for( int c = 0; c < r.size() - 1; c++ ) {
+			total += 0.5 * (r[c+1] - r[c]) * (integrand_lt(c+1, Bm, w) + integrand_lt(c, Bm, w));
+		}
 	}
 	return total;
 }
 
+// integral over k_gamma for l-plasmon
+double kIntg( double Bm, int c ) {
+	double total = 0;
+	double kD = sqrt(8*pi*alpha*ne[c]/T[c]);
+	double dk = kD/1000;
+	for( double k = dk; k < kD; k+= dk ) {
+		//cout << k << endl;
+		total += 0.5 * dk * (integrand_ll(c, Bm, k+dk) + integrand_ll(c, Bm, k+dk));
+	}
+	return total;
+}
 
 // calculate differential particle flux spectrum by intg over solar volume
 // dN/dw, units Bg-2
@@ -99,14 +138,16 @@ void spectrum_lt() {
 	double Bm = 1e4;		// cham matter coupling (or fixed scalar mass)
 	n = 1;					// cham model n
 	double dw = 1e0;
+	bool decay = true;		// plasmon decay vs coalescence
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);					// eV
-		count.push_back( solarIntg_lt(w,Bm) );		// Bg-2
+		count.push_back( solarIntg_lt(w,Bm,decay) );		// Bg-2
 		//cout<<solarIntg_lt(w,Bm)<<endl;
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 	}
 	// write to file
-	string name = "data/coalescence_lt_spectrum_1e4.dat";
+	string name = "data/coalescence_lt_spectrum_1e2--constrained.dat";
+	if(decay) { name = "data/plasmondecay_lt_spectrum_1e2.dat"; }
 	write2D( name , energy, count );
 }
 
@@ -119,7 +160,7 @@ void profile_ll() {
 	n = 1;					// cham model n
 	for( int c = 0; c < r.size(); c++ ) {
 		radius.push_back(r[c]);
-		rate.push_back( integrand_ll(Bm, c) );
+		rate.push_back( kIntg(Bm, c) );
 	}
 	// write to file
 	string name = "data/coalescence_ll_profile_1e2.dat";
@@ -144,7 +185,7 @@ void spectrum_ll() {
 		else{
 		r1 = r[j];
 		energy.push_back(w1);
-		count.push_back( integrand_ll(Bm, j) * abs((r2-r1)/(w2-w1)) );
+		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) );
 		//cout << integrand_ll(Bm, j) << endl;
 		r2 = r[j];
 		w2 = wp[j];

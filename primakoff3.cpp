@@ -12,7 +12,7 @@ double pi = 3.14159265359;
 double alpha = 1/137.035999084;
 double me = 510998.950;		// e- mass [eV]
 double Mpl = 2e27;   		// planck mass [eV]
-double E = 2e-3;    		// cham potential energy scale [eV] (2.4e-3 for cosmological const)
+double E = 2.4e-3;    		// cham potential energy scale [eV] (2.4e-3 for cosmological const)
 double n = 0;				// chameleon potential 1/phi^n
 double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 double dSolar = 149.5978707e9/(1.973269804e-7);		// mean earth-sun distance [eV-1]
@@ -38,9 +38,10 @@ vector<vector<double>> z2 = readGaunt("data/Z2.dat");	// gaunt factors for Z=2
 // cham model params n (phi-n potential), Bm (matter coupling)
 // assume rho dominated by matter density
 double mCham2( int c, double Bm ) {
-	if(n<1) { cout<<"ERROR! n < 1"<<endl; return 0; }
+	//if(n==0) { cout<<"ERROR! n = 0"<<endl; return 0; }
 	double E4n = pow(E,4+n);
-	return n*(n+1)*E4n*pow( Bm*rho[c]/(n*Mpl*E4n), (n+2)/(n+1) );
+	if(n<10) { return n*(n+1)*E4n*pow( pow( Bm*rho[c]/(n*Mpl*E4n), (n+2) ) , 1/(n+1) ); }
+	else { return n*(n+1)*E4n* pow( Bm*rho[c]/(n*Mpl*E4n), (n+2)/(n+1) ); }
 }
 
 // T plasmon absorbtion length
@@ -98,6 +99,7 @@ double integrand( int c, double Bm, double w, double Ggamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
 	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	//cout<<ms2<<endl;
 	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
 	if( w*w <= ms2 ) { return 0; }
@@ -137,8 +139,11 @@ double L_integrand( int c, double Bm, double kgamma ) {
 	double Dyuv = curlyD(yArg,vArg);
 	//cout << Dyuv << endl;
 
-	return alpha/(8*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
-			* w*w*kphi/kgamma * Dyuv;		// [eV2]
+	//return alpha/(8*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c]/(exp(w/T[c]) - 1) 
+	//		* w*w*kphi/kgamma * Dyuv;		// [eV2]
+	
+	return alpha/(2*Mpl*Mpl*pi) * pow(r[c], 2) * ne[c] * T[c]
+			* kphi * Dyuv;		// [eV2]
 }
 
 // integral over solar volume, for a given scalar mass and energy
@@ -176,7 +181,7 @@ double kIntg( double Bm, int c ) {
 	double dk = kD/1000;
 	for( double k = dk; k < kD; k+= dk ) {
 		//cout << k << endl;
-		total += 0.5 * dk * (L_integrand(c+1, Bm, k) + L_integrand(c, Bm, k));
+		total += 0.5 * dk * (L_integrand(c, Bm, k+dk) + L_integrand(c, Bm, k));
 	}
 	return total;
 }
@@ -268,7 +273,7 @@ void L_spectrum() {
 // get combined LT spectrum
 void total_spectrum() {
 	vector<double> count, energy;
-	double Bm = 1e3;		// cham matter coupling
+	double Bm = 1e2;		// cham matter coupling
 	n = 1;					// cham model n
 	double w1, w2 = 0;
 	double r1, r2 = rSolar;
@@ -280,51 +285,48 @@ void total_spectrum() {
 		r1 = r[j];
 		energy.push_back(w1);
 		count.push_back( ( kIntg(Bm, j) * abs((r2-r1)/(w2-w1))	// L
-						+ solarIntg(w1,Bm) ) /(4*pi*dSolar*dSolar));					// T
+						+ solarIntg(w1,Bm) ) );					// T
 		r2 = r[j];
 		w2 = wp[j];
 		}
 	}
 	for( double w = w1+dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
-		count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
+		count.push_back( solarIntg(w,Bm) );
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
 	}
 	// write to file
-	string name = "data/primakoffV3_total-spectrum_cham_1e3.dat";
+	string name = "data/primakoffV3_total-spectrum_cham_1e2_nMinus4.dat";
 	write2D( name , energy, count );
 }
 
-/*
-// calculate energy loss as a function of m
+
+// calculate energy loss as a function of Bm
 // units eV2 Bm-2
 void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
 	double dw = 1e1;
 	n = 1;
-	for( double Bm = 1e0; Bm <= 1e10; Bm*=1.1 ) {
+	double w1, w2, r1, r2 = 0;
+	for( double Bm = 1e0; Bm <= 1e4; Bm*=1.1 ) {
 		double total = 0;
-		for( int j = wp.size()-1; j >=0; j-- ){
+		for( int j = wp.size()-1; j >= 0; j-- ){
 			w1 = wp[j];
-			if(w2 > w1) { continue; }
+			if(w2 >= w1) { continue; }
 			else{
 			r1 = r[j];
 			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
 								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
+			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
 			r2 = r[j];
 			w2 = wp[j];
 			}
 		}
 		for( double w = w1+dw; w < 2e4; w+=dw ){
-			energy.push_back(w);
-			count.push_back( solarIntg(w,Bm) /(4*pi*dSolar*dSolar) );
-			if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-			//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
-		}
-		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
+			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		}
 		mass.push_back(Bm);
 		Q.push_back(total);
@@ -332,10 +334,91 @@ void Eloss() {
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/primakoff_Eloss_n1.dat";
+	string name = "data/primakoff_total_Eloss_n1.dat";
 	write2D( name , mass, Q );
 }
-*/
+
+// calculate energy loss as a function of n
+// units eV2 Bg-2
+void Eloss_n() {
+	vector<double> nvec;
+	vector<double> Q;
+	double dw = 1e1;
+	double Bm = 1e2;
+	n = -10;
+	double w1, w2, r1, r2 = 0;
+	while ( n <= 100 ) {
+		if( (n<0) && ((int)n%2 != 0) ) { continue; }
+		double total = 0;
+		for( int j = wp.size()-1; j >= 0; j-- ){
+			w1 = wp[j];
+			if(w2 >= w1) { continue; }
+			else{
+			r1 = r[j];
+			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
+								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
+			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
+			r2 = r[j];
+			w2 = wp[j];
+			}
+		}
+		for( double w = w1+dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
+			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		}
+		nvec.push_back(n);
+		Q.push_back(total);
+		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
+		cout<<"n = "<<n<<endl;
+		n+=4;
+	}
+	// write to file
+	string name = "data/primakoff_total_Eloss_n.dat";
+	write2D( name, nvec, Q );
+}
+
+
+// calculate energy loss as a function of Lambda
+// units eV2 Bg-2
+void Eloss_Lambda() {
+	vector<double> Evec;
+	vector<double> Q;
+	double dw = 1e1;
+	double Bm = 1e2;
+	n = 1;
+	E = 1e-6;
+	double w1, w2, r1, r2 = 0;
+	while ( E <= 1e0 ) {
+		//if( (n<0) && ((int)n%2 != 0) ) { continue; }
+		double total = 0;
+		for( int j = wp.size()-1; j >= 0; j-- ){
+			w1 = wp[j];
+			if(w2 >= w1) { continue; }
+			else{
+			r1 = r[j];
+			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
+								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
+			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
+			r2 = r[j];
+			w2 = wp[j];
+			}
+		}
+		for( double w = w1+dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
+			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		}
+		Evec.push_back(E);
+		Q.push_back(total);
+		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
+		cout<<"E = "<<E<<endl;
+		E*=1.1;
+	}
+	// write to file
+	string name = "data/primakoff_total_Eloss_Lambda.dat";
+	write2D( name, Evec, Q );
+}
+
+
 
 // data for contour plot of w & r
 // down columns: r[c] over whole range
@@ -399,8 +482,8 @@ int main() {
 	*/
 	
 	//L_profile();
-	spectrum();
-	//Eloss();
+	L_spectrum();
+	//Eloss_Lambda();
 	//contour();
 	return 0;
 	}
