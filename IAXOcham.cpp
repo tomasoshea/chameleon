@@ -18,6 +18,7 @@ double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 double dSolar = 149.5978707e9/(1.973269804e-7);		// mean earth-sun distance [eV-1]
 int nancount = 0;
 int ucount = 0;
+double rhoLead = 11.34*1e3*kg2eV*pow(m2eV,3);	// density of lead (11.34 g cm-3) [eV4]
 
 // solar params
 vector<double> ne = read("data/ne.dat");		// electron number density [eV3]
@@ -187,43 +188,6 @@ double kIntg( double Bm, int c ) {
 }
 
 
-// calculate emission rate profile over solar radius (dN/dr)
-// integrated over relevant energies up to 20 keV
-void profile() {
-	vector<double> radius;
-	vector<double> rate;
-	double Bm = 1e2;		// cham matter coupling
-	n = 1;					// cham model n
-	double dw = 1e0;
-	for( int c = 0; c < r.size(); c++ ) {
-		double total = 0;
-		for( double w = dw; w < 2e4; w+=dw ){
-			total += 0.5*dw*( integrand(c,Bm,w+dw,0) + integrand(c,Bm,w,0) );
-		}
-		radius.push_back(r[c]);
-		rate.push_back(total);
-	}
-	// write to file
-	string name = "data/primakoffV3_profile_1e2.dat";
-	write2D( name , radius, rate );
-}
-
-void L_profile() {
-	vector<double> radius, rate;
-	//double ms = 1e-3;		// scalar mass 1 eV
-	//double ms2 = ms*ms;
-	double Bm = 1e2;		// cham matter coupling
-	n = 1;					// cham model n
-	for( int c = 0; c < r.size(); c++ ) {
-		radius.push_back(r[c]);
-		rate.push_back( kIntg(Bm, c) );
-	}
-	// write to file
-	string name = "data/primakoffV3_L_profile_1e2.dat";
-	write2D( name , radius, rate );
-}
-
-
 // calculate differential particle flux spectrum by intg over solar volume
 // dN/dw, units Bg-2
 // (where dN is really dN/dt, sorry)
@@ -302,227 +266,24 @@ void total_spectrum() {
 }
 
 
-// calculate energy loss as a function of Bm
-// units eV2 Bm-2
-void Eloss() {
-	vector<double> mass;
-	vector<double> Q;
-	double dw = 1e1;
+// chameleon mass (so minimum energy) in lead shielding
+// function of chameleon parameters
+// units eV
+void lead() {
+	vector<double> beta, mass;
+	double rho = rhoLead;
 	n = 1;
-	double w1, w2, r1, r2 = 0;
-	for( double Bm = 1e0; Bm <= 1e4; Bm*=1.1 ) {
-		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
-			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
-			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
-			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-		}
-		mass.push_back(Bm);
-		Q.push_back(total);
-		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
-		cout<<"Bm = "<<Bm<<endl;
-	}
-	// write to file
-	string name = "data/primakoff_total_Eloss_n1.dat";
-	write2D( name , mass, Q );
-}
-
-// calculate energy loss as a function of n
-// units eV2 Bg-2
-void Eloss_n() {
-	vector<double> nvec;
-	vector<double> Q;
-	double dw = 1e1;
-	double Bm = 1e2;
-	n = -10;
-	double w1, w2, r1, r2 = 0;
-	while ( n <= 100 ) {
-		if( (n<0) && ((int)n%2 != 0) ) { continue; }
-		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
-			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
-			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
-			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-		}
-		nvec.push_back(n);
-		Q.push_back(total);
-		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
-		cout<<"n = "<<n<<endl;
-		n+=4;
-	}
-	// write to file
-	string name = "data/primakoff_total_Eloss_n.dat";
-	write2D( name, nvec, Q );
-}
-
-
-// calculate energy loss as a function of Lambda
-// units eV2 Bg-2
-void Eloss_Lambda() {
-	vector<double> Evec;
-	vector<double> Q;
-	double dw = 1e1;
-	double Bm = 1e2;
-	n = 1;
-	E = 1e-6;
-	double w1, w2, r1, r2 = 0;
-	while ( E <= 1e0 ) {
-		//if( (n<0) && ((int)n%2 != 0) ) { continue; }
-		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*solarIntg(w1,Bm) + w2*solarIntg(w2,Bm) );
-			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
-			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
-			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-		}
-		Evec.push_back(E);
-		Q.push_back(total);
-		//if((int)(log10(Bm)) % 1 == 0) { cout<<"Bm = 1e"<<(int)(log10(Bm))<<" of 1e8"<<endl; }
-		cout<<"E = "<<E<<endl;
-		E*=1.1;
-	}
-	// write to file
-	string name = "data/primakoff_total_Eloss_Lambda.dat";
-	write2D( name, Evec, Q );
-}
-
-
-
-// data for contour plot of w & r
-// down columns: r[c] over whole range
-// right along rows: w from 0.1 to 20 keV
-// ie. dat[r,w]
-void contour() {
-	vector<double> flux, rOut, wOut;
-	double dw = 1e0;
-	n = 1;
-	double Bm = 1e2;
-	string name = "data/primakoff_contour_1e2.dat";
-	for( int c = 0; c < r.size(); c++ ) {
-		rOut.push_back(r[c]/rSolar);
-		for( double w = dw; w <= 2e4; w+=dw ) {
-			flux.push_back(integrand(c,Bm,w,0));
-			//cout << integrand(c,Bm,w,0) << endl;
-			if(c==0) { wOut.push_back(w); }
-		}
-		writeREST( name, flux, c );
-		//cout<<"line "<<c<<" written!"<<endl;
-		flux.clear();
-	}
-	write2D("data/rFrac_T_contour.dat",rOut,rOut);
-	write2D("data/w_T_contour.dat",wOut,wOut);
-	cout<<"\acompleted it mate"<<endl;
-}
-
-void L_contour() {
-	vector<double> flux, rOut, wOut;
-	double dw = 1e0;
-	n = 1;
-	double Bm = 1e2;
-	string name = "data/primakoff_L_contour_1e2.dat";
-	for( int c = 0; c < r.size(); c++ ) {
-		rOut.push_back(r[c]/rSolar);
-		for( double w = dw; w <= 2e4; w+=dw ) {
-			if(w<wp[c+1] or w>wp[c]) { flux.push_back(0); }
-			else if( c == r.size()-1 ) { flux.push_back(0); }
-			else{ 
-				double dr = abs(r[c+1] - r[c]);
-				double dw = abs(wp[c+1] - wp[c]);
-				double total = 0.5*dr*(kIntg(Bm,c+1) + kIntg(Bm,c));
-				flux.push_back(total/dr/dw);
-				//cout<<total<<endl;
-			}
-			if(c==0) { wOut.push_back(w); }
-		}
-		writeREST( name, flux, c );
-		if(c % (int)(1e2) == 0) { cout<<"line "<<c<<" (of "<<r.size()-1<<") written!"<<endl; }
-		flux.clear();
-	}
-	write2D("data/rFrac_L_contour.dat",rOut,rOut);
-	write2D("data/w_L_contour.dat",wOut,wOut);
-	cout<<"\acompleted it mate"<<endl;
-}
-
-
-void mass_profile() {
-	vector<double> radius, mass;
-	double Bm = 1e0;		// cham matter coupling
-	n = 1;					// cham model n
-	E = 1e0;				// Lambda [eV]
-	for( int c = 0; c < r.size(); c++ ) {
-		radius.push_back(r[c]);
-		mass.push_back(mCham2(c,Bm));
-	}
-	// write to file
-	string name = "data/mass_profile_1e2.dat";
-	write2D( name , radius, mass );
-}
-
-
-// get m as function of Lambda and B_m for given n
-// m in eV
-// down columns: Bm from 1e0 to 1e10
-// right along rows: Lambda from 1e-10 to 1e0
-// ie. dat[r,w]
-void mass_contour() {
-	vector<double> mass, BOut, LOut;
+	double E4n = pow(E,4+n);
 	double mB = 1.1;
-	double mL = mB;
-	n = 1;
-	int c = 0;
-	string name = "data/massregion_n1--1e3.dat";
-	for( double Bm = 1e-1; Bm <= 1e18; Bm*=mB ) {
-		BOut.push_back(Bm);
-		for( double L = 1e-8; L <= 1e1; L*=mL ) {
-			E = L;
-			double total = sqrt( mCham2(0,Bm) );
-			if(total >= 1e3) {total = 1e3;}
-			mass.push_back(total);
-			//cout<<total<<endl;
-			if(c==0) { LOut.push_back(E); }
-		}
-		writeREST( name, mass, c );
-		//if(int(10*log10(Bm))%10 == 0) { cout<<"Bm = "<<Bm<<" (of "<<1e10<<") written!"<<endl; }
-		mass.clear();
-		c++;
+	for( double Bm = 1e-10; Bm <= 1e1; Bm*=mB ) {
+		beta.push_back(Bm);
+		mass.push_back( n*(n+1)*E4n* pow( Bm*rho/(n*Mpl*E4n), (n+2)/(n+1) ) );
 	}
-	write2D("data/massregion_Bm.dat",BOut,BOut);
-	write2D("data/massregion_Lambda.dat",LOut,LOut);
-	cout<<"\acompleted it mate"<<endl;
+	// write to file
+	string name = "data/lead_n1.dat";
+	write2D( name ,beta , mass );
 }
-
+		
 
 int main() { 
 	/*// convert Gaunt factor Theta to T in eV
@@ -530,9 +291,10 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 	*/
 	
-	mass_profile();
+	//mass_profile();
 	//L_spectrum();
 	//Eloss_Lambda();
-	mass_contour();
+	//mass_contour();
+	lead();
 	return 0;
 	}
