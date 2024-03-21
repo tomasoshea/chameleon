@@ -12,8 +12,6 @@ double pi = 3.14159265359;
 double alpha = 1/137.035999084;
 double me = 510998.950;		// e- mass [eV]
 double Mpl = 2e27;   		// planck mass [eV]
-double E = 2.4e-3;    		// cham potential energy scale [eV] (2.4e-3 for cosmological const)
-double n = 0;				// chameleon potential 1/phi^n
 double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 double dSolar = 149.5978707e9/(1.973269804e-7);		// mean earth-sun distance [eV-1]
 int nancount = 0;
@@ -33,16 +31,23 @@ vector<double> nHe4 = read("data/nHe4.dat");	// He4 number density [eV3]
 vector<vector<double>> z1 = readGaunt("data/Z1.dat");	// gaunt factors for Z=1
 vector<vector<double>> z2 = readGaunt("data/Z2.dat");	// gaunt factors for Z=2
 
+// variables
+double E = 2.4e-3;    		// cham potential energy scale [eV] (2.4e-3 for cosmological const)
+double n = 1;				// chameleon potential 1/phi^n
+double Bm = 1e2;			// cham matter coupling
+double B_iaxo = 0;			// IAXO B-field [eV2]
+double L_iaxo = 0;			// IAXO conversion length [eV-1]
+
 
 
 // chameleon mass as a function of solar radius and model parameters
 // cham model params n (phi-n potential), Bm (matter coupling)
 // assume rho dominated by matter density
-double mCham2( int c, double Bm ) {
+double mCham2( double rho ) {
 	//if(n==0) { cout<<"ERROR! n = 0"<<endl; return 0; }
 	double E4n = pow(E,4+n);
-	if(n<0) { return n*(n+1)*E4n*pow( pow( Bm*rho[c]/(n*Mpl*E4n), (n+2) ) , 1/(n+1) ); }
-	else { return n*(n+1)*E4n* pow( Bm*rho[c]/(n*Mpl*E4n), (n+2)/(n+1) ); }
+	if(n<0) { return n*(n+1)*E4n*pow( pow( Bm*rho/(n*Mpl*E4n), (n+2) ) , 1/(n+1) ); }
+	else { return n*(n+1)*E4n* pow( Bm*rho/(n*Mpl*E4n), (n+2)/(n+1) ); }
 }
 
 // T plasmon absorbtion length
@@ -96,10 +101,10 @@ double curlyIapprox( double u, double v ) {		// for u->1
 
 // differential scalar production rate on earth d2N/dr/dw times Lambda2
 // units eV Bm-2
-double integrand( int c, double Bm, double w, double Ggamma ) {
+double integrand( int c, double w ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
 	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
-	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	double ms2 = mCham2(c);					// chameleon mass2 [eV2]
 	//cout<<ms2<<endl;
 	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= mg2 ) { return 0; }
@@ -126,10 +131,10 @@ double integrand( int c, double Bm, double w, double Ggamma ) {
 // differential scalar production rate on earth d2N/dw/dk times Bg2
 // pure longitudinal component only
 // units Lambda2
-double L_integrand( int c, double Bm, double kgamma ) {
+double L_integrand( int c, double kgamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
 	double w = wp[c];						// omega is plasma freq
-	double ms2 = mCham2(c,Bm);			// chameleon mass2 [eV2]
+	double ms2 = mCham2(c);					// chameleon mass2 [eV2]
 	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
 	if( w*w <= ms2 ) { return 0; }
 	double K2 = 8*pi*alpha*ne[c]/T[c];		// Debye screening scale ^2 [eV2]
@@ -149,40 +154,22 @@ double L_integrand( int c, double Bm, double kgamma ) {
 
 // integral over solar volume, for a given scalar mass and energy
 // returns dPhi/dw Bg-2 [eV2]
-double solarIntg( double w, double Bm ) {
+double solarIntg( double w ) {
 	double total = 0;
 	for( int c = 0; c < r.size() - 1; c++ ) {
-		/*// select g(w, T) value from matrix
-		int indexT1;
-		int indexT2;
-		int indexX1;
-		int indexX2;
-		for( int i = 1; i < 200; i++ ) {
-			if( z1[0][i] < T[c] and z1[0][i+1] > T[c] ) { indexT1 = i; }
-			if( z2[0][i] < T[c] and z2[0][i+1] > T[c] ) { indexT2 = i; }
-		}
-		for( int i = 1; i < 500; i++ ) {
-			if( (z1[i][0] * T[c]) < w and (z1[i+1][0] * T[c]) > w ) { indexX1 = i; }
-			if( (z2[i][0] * T[c]) < w and (z2[i+1][0] * T[c]) > w ) { indexX2 = i; }
-		}
-		double g1 = z1[ indexT1 ][ indexX1 ];
-		double g2 = z2[ indexT2 ][ indexX2 ];
-		double G = GammaPhoton(w, c, g1, g2);
-		*/
-		double G = 0;
-		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1, Bm, w, G) + integrand(c, Bm, w, G));
+		total += 0.5 * (r[c+1] - r[c]) * (integrand(c+1,w) + integrand(c,w));
 	}
 	return total;
 }
 
 // integral over k_gamma for l-plasmon
-double kIntg( double Bm, int c ) {
+double kIntg( int c ) {
 	double total = 0;
 	double kD = sqrt(8*pi*alpha*ne[c]/T[c]);
 	double dk = kD/1000;
 	for( double k = dk; k < kD; k+= dk ) {
 		//cout << k << endl;
-		total += 0.5 * dk * (L_integrand(c, Bm, k+dk) + L_integrand(c, Bm, k));
+		total += 0.5 * dk * (L_integrand(c, k+dk) + L_integrand(c, k));
 	}
 	return total;
 }
@@ -193,14 +180,13 @@ double kIntg( double Bm, int c ) {
 // (where dN is really dN/dt, sorry)
 void spectrum() {
 	vector<double> count, energy;
-	//double ms = 1e-3;		// scalar mass 1 eV
-	//double ms2 = ms*ms;
-	double Bm = 1e2;		// cham matter coupling
-	n = 1;					// cham model n
+	Bm = 1e2;
+	n = 1;
+	E = 2.4e-3;
 	double dw = 1e0;
 	for( double w = dw; w < 2e4; w+=dw ){
 		energy.push_back(w);					// eV
-		count.push_back( solarIntg(w,Bm) );		// Bg-2
+		count.push_back( solarIntg(w) );		// Bg-2
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
 	}
@@ -211,10 +197,9 @@ void spectrum() {
 
 void L_spectrum() {
 	vector<double> count, energy;
-	//double ms = 1e-3;		// scalar mass 1 eV
-	//double ms2 = ms*ms;
-	double Bm = 1e2;		// cham matter coupling
-	n = 1;					// cham model n
+	Bm = 1e2;
+	n = 1;
+	E = 2.4e-3;
 	double w1, w2 = 0;
 	double r1, r2 = rSolar;
 	for( int j = wp.size()-1; j >=0; j-- ){
@@ -223,7 +208,7 @@ void L_spectrum() {
 		else{
 		r1 = r[j];
 		energy.push_back(w1);
-		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) );
+		count.push_back( kIntg(j) * abs((r2-r1)/(w2-w1)) );
 		r2 = r[j];
 		w2 = wp[j];
 		}
@@ -237,8 +222,9 @@ void L_spectrum() {
 // get combined LT spectrum
 void total_spectrum() {
 	vector<double> count, energy;
-	double Bm = 1e2;		// cham matter coupling
-	n = 1;					// cham model n
+	Bm = 1e2;
+	n = 1;
+	E = 2.4e-3;
 	double w1, w2 = 0;
 	double r1, r2 = rSolar;
 	double dw = 1e0;
@@ -248,15 +234,15 @@ void total_spectrum() {
 		else{
 		r1 = r[j];
 		energy.push_back(w1);
-		count.push_back( ( kIntg(Bm, j) * abs((r2-r1)/(w2-w1))	// L
-						+ solarIntg(w1,Bm) ) );					// T
+		count.push_back( ( kIntg(j) * abs((r2-r1)/(w2-w1))	// L
+						+ solarIntg(w1) ) );					// T
 		r2 = r[j];
 		w2 = wp[j];
 		}
 	}
 	for( double w = w1+dw; w < 2e4; w+=dw ){
 		energy.push_back(w);
-		count.push_back( solarIntg(w,Bm) );
+		count.push_back( solarIntg(w) );
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
 	}
@@ -273,28 +259,87 @@ void lead() {
 	vector<double> beta, mass;
 	double rho = rhoLead;
 	n = 1;
+	E = 2.4e-3;
 	double E4n = pow(E,4+n);
 	double mB = 1.1;
-	for( double Bm = 1e-10; Bm <= 1e1; Bm*=mB ) {
+	for( Bm = 1e-10; Bm <= 1e1; Bm*=mB ) {
 		beta.push_back(Bm);
-		mass.push_back( n*(n+1)*E4n* pow( Bm*rho/(n*Mpl*E4n), (n+2)/(n+1) ) );
+		mass.push_back( sqrt(mCham2(rhoLead)) );
 	}
 	// write to file
 	string name = "data/lead_n1.dat";
 	write2D( name ,beta , mass );
 }
 		
+		
+
+// back conversion prob
+// naive version, with low m but a = 0
+// (becomes indpt of both w and m)
+// dimensionless
+double backConversion() {
+	return pow(B_iaxo*L_iaxo/2/Mpl, 2);
+}
+
+
+// get IAXO back-converted flux
+// input detector params B, L
+// units eV3/keV
+void IAXO( double Bin, double Lin, string model ) {
+	vector<double> beta, flux;
+	n = 1;
+	E = 2.4e-3;
+	B_iaxo = Bin;
+	L_iaxo = Lin;
+	double Emin = 1e3;
+	double Emax = 2e4;
+	double P = backConversion();
+	double dw = 1e1;
+	double w1, w2, r1, r2 = 0;
+	for( double Bm = 1e-1; Bm <= 1e18; Bm*=10 ) {
+		double total = 0;
+		if( Emin < 300 ) {
+		for( int j = wp.size()-1; j >= 0; j-- ){
+			w1 = wp[j];
+			if(w2 >= w1) { continue; }
+			else{
+			r1 = r[j];
+			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(j) * abs((r2-r1)/(w2-w1)) )
+								 + w1*solarIntg(w1) + w2*solarIntg(w2) );
+			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
+			r2 = r[j];
+			w2 = wp[j];
+			}
+		}
+		for( double w = w1+dw; w < 2e4; w+=dw ){
+			total += 0.5*dw*( (w+dw)*solarIntg(w+dw) + w*solarIntg(w) );
+		}
+		}
+		else{ for( double w = Emin; w < Emax; w+=dw ){ 
+			total += 0.5*dw*(solarIntg(w+dw)+solarIntg(w)); } 
+		}
+		beta.push_back(Bm);
+		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));
+		cout << "Bm = " << Bm << " of 1e18" << endl;
+	}
+	// write to file
+	string name = "data/"+model+"_totalflux.dat";
+	write2D( name, beta, flux );
+}
 
 int main() { 
-	/*// convert Gaunt factor Theta to T in eV
-	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
-	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
-	*/
+	double B_baby = 2*T2eV;	// babyIAXO B-field [eV2]
+	double L_baby = 10/m2eV;	// babyIAXO length [eV-1]
 	
-	//mass_profile();
-	//L_spectrum();
-	//Eloss_Lambda();
-	//mass_contour();
-	lead();
+	double B_base = 2.5*T2eV;	// babyIAXO B-field [eV2]
+	double L_base = 20/m2eV;	// babyIAXO length [eV-1]
+	
+	double B_plus = 3.5*T2eV;	// babyIAXO B-field [eV2]
+	double L_plus = 22/m2eV;	// babyIAXO length [eV-1]
+	
+	double B_cast = 9*T2eV;	// babyIAXO B-field [eV2]
+	double L_cast = 9.26/m2eV;	// babyIAXO length [eV-1]
+	
+	IAXO(B_plus, L_plus, "plusIAXO");
 	return 0;
-	}
+}

@@ -297,7 +297,7 @@ void total_spectrum() {
 		//if((int)(w) % (int)(100*dw) == 0) { cout<<"w = "<<w<<"eV of 1000eV"<<endl; }
 	}
 	// write to file
-	string name = "data/primakoffV3_total-spectrum_cham_1e2_nMinus4.dat";
+	string name = "data/primakoffV3_total-spectrum_1e2.dat";
 	write2D( name , energy, count );
 }
 
@@ -530,9 +530,9 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 	*/
 	
-	mass_profile();
-	//L_spectrum();
+	//mass_profile();
+	total_spectrum();
 	//Eloss_Lambda();
-	mass_contour();
+	//mass_contour();
 	return 0;
 	}
