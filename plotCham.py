@@ -37,7 +37,7 @@ plt.style.use("style.txt")	# import plot style
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
-ax2.set(xlim=(1e0, 1e4), ylim=(1e-1, 1e11))
+#ax2.set(xlim=(1e0, 1e4), ylim=(1e-1, 1e11))
 
 # add IAXO bits
 path = "data/limits/chamstats"
@@ -69,9 +69,10 @@ Bg = sqrt(Lsolar*3/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', color='m',label='Solar energy loss')
 
 
-dat = loadtxt("data/CAST_totalflux.dat")
+#dat = loadtxt("data/CAST_totalflux.dat")
+dat = loadtxt("data/CAST_old_totalflux.dat")
 Bg = power(divide(castbkg,dat[:,1]), 1/4)
-ax2.plot(dat[:,0],Bg, ls='-', label='CAST (new)')
+ax2.plot(dat[:,0],Bg, ls='-', label='CAST (old, calcd)')
 
 dat = loadtxt("data/babyIAXO_totalflux.dat")
 Bg = power(divide(babybkg,dat[:,1]), 1/4)
@@ -123,5 +124,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()#loc='lower right')
 
-plt.savefig('plots/chamLimits_IAXO_n1.jpg')
+plt.savefig('plots/chamLimits_CASTold.jpg')
 plt.show()
