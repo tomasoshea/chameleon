@@ -4,7 +4,6 @@
 
 from numpy import loadtxt
 from matplotlib import pyplot as plt
-from matplotlib import ticker
 import numpy as np
 from numpy import power as pow
 
@@ -20,35 +19,39 @@ ax2 = fig2.add_axes((.1,.1,.8,.8))
 ax2.set(xlim=(1e-18,1e1), ylim=(1e-8, 1e1))
 v = np.logspace(1e-20,1e0,nticks)
 
-Bm = loadtxt("data/massregion_Bm.dat",usecols=0)
-Mm = 1/Bm
-Lambda = loadtxt("data/massregion_Lambda.dat",usecols=0)
-#dat = loadtxt("data/primakoff_contour_1e2.dat",delimiter='	')
-dat = loadtxt("data/massregion_n1--1e3.dat",delimiter='	').swapaxes(0,1)
-#dat = loadtxt("data/scalarB_contour_1e2.dat",delimiter='	')
-
-#dat = integrand(1e2,w,r,ne,T,rho)
-conts = ax2.contourf(Mm,Lambda,dat,locator=ticker.LogLocator())
-
-ax2.hlines(2.4e-3, 1e-18, 1e1, color='black', ls='-', label='DE scale')
-
+# plot DE scale
+ax2.hlines(2.4e-3, 1e-18, 1e1, color='black', ls='-', label='DE scale',zorder=10)
 
 # plot "cutoff"
-Lam = np.logspace(-8,0,100)
+Lam = np.logspace(-18,1,100)
 def Beta(L):
 	return 4.85532e9 * pow(L,1.53724)
 np.vectorize(Beta)
 Bm = 1/Beta(Lam)
-ax2.plot(Bm, Lam)
+ax2.plot(Bm, Lam,ls='-',label='Solar',color='r')
+
+# plot other bounds
+dat = np.loadtxt("data/limits/casimir.dat", delimiter=',')
+print(dat[:,1])
+#ax2.plot(dat[:,0],dat[:,1],ls=':',label='Casimir')
+
+dat = np.loadtxt("data/limits/interferometry.dat", delimiter=',')
+ax2.plot(dat[:,0],dat[:,1],ls=':',label='Interferometry')
+
+dat = np.loadtxt("data/limits/lfs.dat", delimiter=',')
+ax2.plot(dat[:,0],dat[:,1],ls=':',label='LFS')
+
+dat = np.loadtxt("data/limits/torsionbalance.dat", delimiter=',')
+ax2.plot(dat[:,0],dat[:,1],ls=':',label='Torsion Balance')
 
 # axes
 ax2.set_xlabel(r'$M$ [$M_\mathrm{Pl}$]')
 ax2.set_ylabel(r'$\Lambda$ [eV]')	#[m-2 s-1 eV-1]")
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-fig2.colorbar(conts,label=r'$m_\phi$ [eV]')#,values=v,boundaries=v,ticks=v)
+ax2.legend()
 
-plt.savefig('plots/massregion_n1.jpg')
+plt.savefig('plots/casimirplot--full.jpg')
 plt.show()
 
 

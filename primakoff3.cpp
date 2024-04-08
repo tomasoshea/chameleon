@@ -384,11 +384,11 @@ void Eloss_Lambda() {
 	vector<double> Evec;
 	vector<double> Q;
 	double dw = 1e1;
-	double Bm = 1e2;
+	double Bm = 1e6;
 	n = 1;
-	E = 1e-6;
+	E = 1e-8;
 	double w1, w2, r1, r2 = 0;
-	while ( E <= 1e0 ) {
+	while ( E <= 1e1 ) {
 		//if( (n<0) && ((int)n%2 != 0) ) { continue; }
 		double total = 0;
 		for( int j = wp.size()-1; j >= 0; j-- ){
@@ -414,7 +414,7 @@ void Eloss_Lambda() {
 		E*=1.1;
 	}
 	// write to file
-	string name = "data/primakoff_total_Eloss_Lambda.dat";
+	string name = "data/primakoff_total_Eloss_Lambda_1e6.dat";
 	write2D( name, Evec, Q );
 }
 
@@ -531,8 +531,8 @@ int main() {
 	*/
 	
 	//mass_profile();
-	total_spectrum();
-	//Eloss_Lambda();
+	//total_spectrum();
+	Eloss_Lambda();
 	//mass_contour();
 	return 0;
 	}
