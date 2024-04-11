@@ -18,7 +18,7 @@ double zeta3 = 1.202056903159594;				// Riemann zeta(3)
 double dSolar = 149.5978707e9/m2eV;				// mean earth-sun distance [eV-1]
 double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 double B0 = 3e3*T2eV;							// radiative zone max B [eV2]
-double B1 = 30*T2eV;//50*T2eV;							// tachocline max B [eV2]
+double B1 = 50*T2eV;							// tachocline max B [eV2]
 double B2 = 3*T2eV;								// outer region max B [T]
 double r0 = 0.712*rSolar;						// [eV-1]
 double r1 = 0.732*rSolar;						// [eV-1]
@@ -214,7 +214,7 @@ void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
 	double dw = 1e3;
-	for( double Bm = 1e0; Bm < 1e8; Bm*=10 ) {
+	for( double Bm = 1e-1; Bm < 1e8; Bm*=10 ) {
 		double total = 0;
 		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*solarIntg(w+dw,Bm) + w*solarIntg(w,Bm) );
@@ -225,7 +225,7 @@ void Eloss() {
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/scalarB_Eloss_cham.dat";
+	string name = "data/scalarB_Eloss_tach.dat";
 	write2D( name , mass, Q );
 }
 
@@ -279,12 +279,91 @@ void contour() {
 // get old CAST back-converted flux for old limits
 // input detector params
 // units eV3/keV
-void CASTold() {
+void CAST_old() {
 	vector<double> beta, flux;
 	string model = "CAST_old";
 	n = 1;
 	E = 2.4e-3;
-	double Bm = 1e-2;
+	double Emin = 1e3;
+	double Emax = 2e4;
+	double B_cast = 9*T2eV;		// babyIAXO B-field [eV2]
+	double L_cast = 9.26/m2eV;	// babyIAXO length [eV-1]
+	double P = pow(B_cast*L_cast/2/Mpl, 2);	// back conversion prob for low m
+	double dw = 1e1;
+	double w1, w2, r1, r2 = 0;
+	for( double Bm = 1e-1; Bm <= 1e8; Bm*=10 ) {
+		double total = 0;
+		for( double w = Emin; w < Emax; w+=dw ){
+			total += 0.5*dw*(solarIntg(w+dw,Bm)+solarIntg(w,Bm));
+		}
+		beta.push_back(Bm);
+		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));	// eV3 keV-1
+		cout << "Bm = " << Bm << " of 1e18" << endl;
+	}
+	// write to file
+	string name = "data/"+model+"_totalflux.dat";
+	write2D( name, beta, flux );
+}
+
+// Brax integral
+// dimensionless
+double Ibrax( double a ) {
+	return sqrt(pi/2)*( sqrt(a + sqrt(a*a + 4)) - sqrt(2*a) );
+}
+
+
+// Brax tachocline calculation
+// differential emission rate (d2N/dwdr)
+// units eV Bg-2
+double Brax( int c, double Bm, double w ){
+	if( r[c]/rSolar < 0.695 ) { return 0; }
+	if( r[c]/rSolar > 0.705 ) { return 0; }
+	double Tc = T[c];
+
+	// tachocline values
+	double mfp_t = 0.3/100/m2eV;				// tachocline mean free path [eV-1]
+	double flux_t = 1e21*1e4*m2eV*m2eV*s2eV;	// tachocline photon flux [eV3]
+	double n_t = 2*zeta3*Tc*Tc*Tc/pi/pi;		// tachocline photon density [eV3]
+
+	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2 [eV2]
+	double ms2 = mCham2(c,Bm);					// chameleon mass2 [eV2]
+	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
+	if( w*w <= mg2 ) { return 0; }
+	if( w*w <= ms2 ) { return 0; }
+	double kgamma = sqrt(w*w - mg2);			// photon momentum [eV]
+	double kphi = sqrt(w*w - ms2);				// scalar momentum [eV]
+	double q = abs(kgamma - kphi);				// mtm transfer [eV]
+	double B = Bfield(c);						// solar B field [eV2]
+	//B = 30*T2eV;
+
+	return 2/(pi*Mpl*Mpl) * pow(r[c], 2) * B*B /(exp(w/T[c]) - 1)
+			* pow(w*w/mg2, 2) * flux_t/(2*pi*n_t*mfp_t)
+			* sqrt(q/2/s2eV) * Ibrax(2/mfp_t/q);	// [eV Bg-2]
+}
+
+
+// integral over solar volume, for a given scalar mass and energy
+double solarIntgBrax( double w, double Bm ) {
+	double total = 0;
+	for( int c = 0; c < r.size() - 1; c++ ) {
+		// tachoclining
+		if(r[c]/rSolar < 0.695) { continue; }
+		else if(r[c]/rSolar > 0.705) { continue; }
+
+		total += 0.5 * (r[c+1] - r[c]) * (Brax(c+1, Bm, w) + Brax(c, Bm, w));
+		//cout<<"r = "<<r[c]/rSolar<<"	dN/dw = "<<Brax(c, Bm, w)<<endl;
+	}
+	return total;
+}
+
+// get old CAST back-converted flux for old limits
+// input detector params
+// units eV3/keV
+void CAST_Brax() {
+	vector<double> beta, flux;
+	string model = "CAST_Brax";
+	n = 1;
+	E = 2.4e-3;
 	double Emin = 1e3;
 	double Emax = 2e4;
 	double B_cast = 9*T2eV;		// babyIAXO B-field [eV2]
@@ -292,10 +371,10 @@ void CASTold() {
 	double P = pow(B_cast*L_cast/2/Mpl, 2);
 	double dw = 1e1;
 	double w1, w2, r1, r2 = 0;
-	for( double Bm = 1e-1; Bm <= 1e8; Bm*=10 ) {
+	for( double Bm = 1e-1; Bm <= 1e12; Bm*=10 ) {
 		double total = 0;
 		for( double w = Emin; w < Emax; w+=dw ){
-			total += 0.5*dw*(solarIntg(w+dw,Bm)+solarIntg(w,Bm));
+			total += 0.5*dw*(solarIntgBrax(w+dw,Bm)+solarIntgBrax(w,Bm));
 		}
 		beta.push_back(Bm);
 		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));
@@ -307,43 +386,13 @@ void CASTold() {
 }
 
 
-// Brax tachocline calculation
-// differential emission rate (d2N/dwdr)
-// units eV Bg-2
-double brax( int c, double Bm ){
-	if( r[c] < 0.695 ) { return 0; }
-	if( r[c] > 0.705 ) { return 0; }
-	double Tc = T[c];
-
-	// tachocline values
-	double mfp_t = 0.3/100/m2eV;					// tachocline mean free path [eV-1]
-	double flux_t = 1e21*1e4*m2eV*m2eV*s2eV;		// tachocline photon flux [eV3]
-	double n_t = 2*zeta3*Tc*Tc*Tc/pi/pi;			// tachocline photon density [eV3]
-
-	double mg2 = 4*pi*alpha*ne[c]/me;			// assume mg2 = wp2 [eV2]
-	double ms2 = mCham2(c,Bm);					// chameleon mass2 [eV2]
-	//double ms2 = Bm*Bm;							// fixed scalar mass2 [eV2]
-	if( w*w <= mg2 ) { return 0; }
-	if( w*w <= ms2 ) { return 0; }
-	double kgamma = sqrt(w*w - mg2);			// photon momentum [eV]
-	double kphi = sqrt(w*w - ms2);				// scalar momentum [eV]
-	double q = abs(kgamma - kphi);				// mtm transfer [eV]
-	double B = Bfield(c);						// solar B field [eV2]
-
-
-	return 2/(pi*Mpl*Mpl) * pow(r[c], 2) * B*B /(exp(w/T[c]) - 1)
-			* pow(w/m, 4) * flux_t/(2*pi*n_t*mfp_t) 
-			* sqrt(q*ls/2) * Ibrax(2/mfp_t/q);	// [eV Bg-2]
-}
-
-
 int main() { 
 	// convert Gaunt factor Theta to T in eV
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//profile();
-	CASTold();
+	CAST_Brax();
 	//Eloss();
 	//contour();
 	return 0;

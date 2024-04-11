@@ -37,7 +37,7 @@ plt.style.use("style.txt")	# import plot style
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
-#ax2.set(xlim=(1e0, 1e4), ylim=(1e-1, 1e11))
+ax2.set(xlim=(1e0, 1e4), ylim=(1e6, 1e11))
 
 # add IAXO bits
 path = "data/limits/chamstats"
@@ -64,30 +64,36 @@ path = "data/limits/chamstats"
 ############### n=1 ####################
 ########################################
 
+# add CAST
+ax2.hlines(5.74e10 / 4, 1e0, 1e11, ls='-', label='CAST (old)')
+
 dat = loadtxt("data/primakoff_total_Eloss_n1.dat")
+#dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
 Bg = sqrt(Lsolar*3/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', color='m',label='Solar energy loss')
 
 
 #dat = loadtxt("data/CAST_totalflux.dat")
+dat = loadtxt("data/CAST_Brax_totalflux.dat")
+Bg = power(divide(castbkg,dat[:,1]), 1/4)
+ax2.plot(dat[:,0],Bg, ls='--', label='CAST (old, Brax)')
+
+#dat = loadtxt("data/CAST_totalflux.dat")
 dat = loadtxt("data/CAST_old_totalflux.dat")
 Bg = power(divide(castbkg,dat[:,1]), 1/4)
-ax2.plot(dat[:,0],Bg, ls='-', label='CAST (old, calcd)')
+ax2.plot(dat[:,0],Bg, ls=':', label='CAST (old, calcd)')
 
 dat = loadtxt("data/babyIAXO_totalflux.dat")
 Bg = power(divide(babybkg,dat[:,1]), 1/4)
-ax2.plot(dat[:,0],Bg, ls='-', label='BabyIAXO')
+#ax2.plot(dat[:,0],Bg, ls='-', label='BabyIAXO')
 
 dat = loadtxt("data/baseIAXO_totalflux.dat")
 Bg = power(divide(basebkg,dat[:,1]), 1/4)
-ax2.plot(dat[:,0],Bg, ls='-', label='IAXO')
+#ax2.plot(dat[:,0],Bg, ls='-', label='IAXO')
 
 dat = loadtxt("data/plusIAXO_totalflux.dat")
 Bg = power(divide(plusbkg,dat[:,1]), 1/4)
-ax2.plot(dat[:,0],Bg, ls='-', label='IAXO+')
-
-# add CAST
-ax2.hlines(5.74e10 / 4, 1e0, 1e11, ls='-', label='CAST (old)')
+#ax2.plot(dat[:,0],Bg, ls='-', label='IAXO+')
 
 # add other limits
 ax2.add_patch( Rectangle( (2e1, 1e-3), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )
