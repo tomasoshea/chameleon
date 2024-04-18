@@ -12,10 +12,10 @@ plt.style.use("style.txt")	# import plot style
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
-ax2.set(xlim=(0,4), ylim=(0, 8e-13))
+#ax2.set(xlim=(0,4), ylim=(0, 8e-13))
 n = 1
-Lambda = 2.4e-3
-rho = 7e-13
+Lambda = 1
+rho = 1
 
 def V(x): return (Lambda**(n+4))/(x**n)
 np.vectorize(V)
@@ -39,5 +39,5 @@ ax2.set_yticks([])
 #ax2.set_yscale('log')
 #ax2.legend()
 
-plt.savefig('plots/Vphi_Vrho_himass--nolabel.jpg')
+plt.savefig('plots/Vphi_Vrho_test--nolabel.jpg')
 plt.show()

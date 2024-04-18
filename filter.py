@@ -32,7 +32,7 @@ rFrac, T, rho, H1, He4, He3, C12, C13, N14, N15, O16, O17, O18, Ne, Na, Mg, Al, 
 # convert values to eV
 T = T * K2eV	# temp from K to eV
 rho = rho * 1e3 * pw(m2eV, 3) * kg2eV	# density from g cm-3 to eV4
-print(rho)
+
 rReal = rFrac * Rsun / m2eV	# radial distance from m to eV-1
 
 
@@ -62,6 +62,11 @@ for i in range(len(rReal)):
 
 nH, nHe4, nHe3 = ionDensities[0:3, :]
 
+# compute nbar = sum_i(Z_i^2 n_i)
+nbar = np.zeros(len(ne))
+nbar+=ne
+for i in range(len(Z)):
+	nbar+=Z[i]*Z[i]*ionDensities[i]		
 
 # compute plasma frequency
 wp2 = np.multiply(( 4 * pi * a / (me) ) , ne)
@@ -78,5 +83,6 @@ np.savetxt('data/nH.dat', nH, delimiter=',')
 np.savetxt('data/nHe4.dat', nHe4, delimiter=',')
 np.savetxt('data/nHe3.dat', nHe3, delimiter=',')
 np.savetxt('data/rho.dat', rho, delimiter=',')
+np.savetxt('data/nbar.dat', nbar, delimiter=',')
 
 

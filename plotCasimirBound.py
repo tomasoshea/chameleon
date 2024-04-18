@@ -28,7 +28,7 @@ def Beta(L):
 	return 4.85532e9 * pow(L,1.53724)
 np.vectorize(Beta)
 Bm = 1/Beta(Lam)
-ax2.plot(Bm, Lam,ls='-',label='Solar',color='r')
+ax2.plot(Beta(Lam), Lam,ls='-',label='Solar',color='r')
 
 # plot other bounds
 dat = np.loadtxt("data/limits/casimir.dat", delimiter=',')
@@ -36,22 +36,22 @@ print(dat[:,1])
 #ax2.plot(dat[:,0],dat[:,1],ls=':',label='Casimir')
 
 dat = np.loadtxt("data/limits/interferometry.dat", delimiter=',')
-ax2.plot(dat[:,0],dat[:,1],ls=':',label='Interferometry')
+ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='Interferometry')
 
 dat = np.loadtxt("data/limits/lfs.dat", delimiter=',')
-ax2.plot(dat[:,0],dat[:,1],ls=':',label='LFS')
+ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='LFS')
 
 dat = np.loadtxt("data/limits/torsionbalance.dat", delimiter=',')
-ax2.plot(dat[:,0],dat[:,1],ls=':',label='Torsion Balance')
+ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='Torsion Balance')
 
 # axes
-ax2.set_xlabel(r'$M$ [$M_\mathrm{Pl}$]')
+ax2.set_xlabel(r'$\beta_m$')
 ax2.set_ylabel(r'$\Lambda$ [eV]')	#[m-2 s-1 eV-1]")
 ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/casimirplot--full.jpg')
+plt.savefig('plots/casimirplot_Bm--full.jpg')
 plt.show()
 
 

@@ -15,7 +15,7 @@ double J2eV = (1. / 1.602176634e-19);	// Joules to eV (1 / e)
 double m2eV = (1.973269804e-7);	// m-1 to eV
 double K2eV = (8.617333262e-5);	// Kelvin to eV
 double kg2eV = 5.609588604e35;	// from hbar/c2
-double T2eV = 2e-16 * 1e18;		// Tesla to eV2 conversion [eV2/T]
+double T2eV = 2e2;		// Tesla to eV2 conversion [eV2/T]
 
 
 // read in datafiles in csv form

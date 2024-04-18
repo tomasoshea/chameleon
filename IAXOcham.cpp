@@ -262,7 +262,7 @@ void lead() {
 	E = 2.4e-3;
 	double E4n = pow(E,4+n);
 	double mB = 1.1;
-	for( Bm = 1e-10; Bm <= 1e1; Bm*=mB ) {
+	for( Bm = 1e-1; Bm <= 1e10; Bm*=mB ) {
 		beta.push_back(Bm);
 		mass.push_back( sqrt(mCham2(rhoLead)) );
 	}
@@ -312,11 +312,11 @@ void IAXO( double Bin, double Lin, string model ) {
 			}
 		}
 		for( double w = w1+dw; w < 2e4; w+=dw ){
-			total += 0.5*dw*( (w+dw)*solarIntg(w+dw) + w*solarIntg(w) );
+			total += 0.5*dw*P*( (w+dw)*solarIntg(w+dw) + w*solarIntg(w) );
 		}
 		}
 		else{ for( double w = Emin; w < Emax; w+=dw ){ 
-			total += 0.5*dw*(solarIntg(w+dw)+solarIntg(w)); } 
+			total += 0.5*dw*P*(solarIntg(w+dw)+solarIntg(w)); } 
 		}
 		beta.push_back(Bm);
 		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));
@@ -340,6 +340,7 @@ int main() {
 	double B_cast = 9*T2eV;	// babyIAXO B-field [eV2]
 	double L_cast = 9.26/m2eV;	// babyIAXO length [eV-1]
 	
-	IAXO(B_plus, L_plus, "plusIAXO");
+	lead();
+	//IAXO(B_cast, L_cast, "CAST");
 	return 0;
 }
