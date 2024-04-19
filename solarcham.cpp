@@ -300,7 +300,7 @@ double integrand_lt( int c, double Bm, double w ) {
 	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
 	if( w*w <= mg2 ) { return 0; }			// w > m_s requirement
 	if( w*w <= ms2 ) { return 0; }			// w > m_g requirement
-	if( ms2 <= mg2 ) { return 0; }			// requirement for coalescence
+	//if( ms2 <= mg2 ) { return 0; }			// requirement for coalescence
 	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
 	double wt = w - sqrt(mg2);				// t-photon omega [eV]
 	double kphi = sqrt(w*w - ms2);			// scalar wavenumber [eV]
@@ -640,7 +640,7 @@ void Eloss_Lambda() {
 	vector<double> Evec;
 	vector<double> Q;
 	double dw = 1e1;
-	double Bm = 1e2;
+	double Bm = 1e0;
 	n = 1;
 	E = 1e-8;
 	double w1, w2, r1, r2 = 0;
@@ -670,7 +670,7 @@ void Eloss_Lambda() {
 		E*=1.1;
 	}
 	// write to file
-	string name = "data/Eloss_Lambda--1e2.dat";
+	string name = "data/Eloss_Lambda--1e0.dat";
 	write2D( name, Evec, Q );
 }
 
@@ -679,9 +679,9 @@ void Eloss_Lambda() {
 // units eV2
 void mass_profile() {
 	vector<double> radius, mass;
-	double Bm = 1e0;		// cham matter coupling
+	double Bm = 1e2;		// cham matter coupling
 	n = 1;					// cham model n
-	E = 1e0;				// Lambda [eV]
+	E = 2.4e-3;				// Lambda [eV]
 	for( int c = 0; c < r.size(); c++ ) {
 		radius.push_back(r[c]);
 		mass.push_back(mCham2(c,Bm));
@@ -739,7 +739,7 @@ void spectrum_lt() {
 		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 	}
 	// write to file
-	string name = "data/coalescence_lt_spectrum_1e2--capped.dat";
+	string name = "data/coalescence_lt_spectrum_1e2--uncapped.dat";
 	write2D( name , energy, count );
 }
 
@@ -798,7 +798,7 @@ int main() {
 
 	//spectrum('B');
 	//profile('B');
-	Eloss();
+	Eloss_Lambda();
 	return 0;
 }
 

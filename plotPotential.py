@@ -39,5 +39,5 @@ ax2.set_yticks([])
 #ax2.set_yscale('log')
 #ax2.legend()
 
-plt.savefig('plots/Vphi_Vrho_test--nolabel.jpg')
+plt.savefig('plots/potential--nolabel.jpg')
 plt.show()

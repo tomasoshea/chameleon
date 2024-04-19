@@ -41,7 +41,7 @@ ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B')
 dat = loadtxt("data/coalescence_ll_spectrum_1e2.dat")
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label="L-L coalescence")
 
-dat = loadtxt("data/coalescence_lt_spectrum_1e2.dat")
+dat = loadtxt("data/coalescence_lt_spectrum_1e2--uncapped.dat")
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label="L-T coalescence")
 
 
@@ -52,5 +52,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/spectrum_LTB_ll_lt--test.jpg')
+plt.savefig('plots/spectrum_LTB_ll_lt--uncapped.jpg')
 plt.show()

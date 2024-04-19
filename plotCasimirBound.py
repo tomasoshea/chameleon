@@ -16,32 +16,32 @@ nticks=100
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
-ax2.set(xlim=(1e-18,1e1), ylim=(1e-8, 1e1))
+ax2.set(xlim=(1e-1,1e18), ylim=(1e-8, 1e1))
 v = np.logspace(1e-20,1e0,nticks)
 
 # plot DE scale
-ax2.hlines(2.4e-3, 1e-18, 1e1, color='black', ls='-', label='DE scale',zorder=10)
+ax2.hlines(2.4e-3, 1e-1, 1e18, color='black', ls='-',zorder=10)
 
 # plot "cutoff"
 Lam = np.logspace(-18,1,100)
 def Beta(L):
 	return 4.85532e9 * pow(L,1.53724)
 np.vectorize(Beta)
-Bm = 1/Beta(Lam)
+#Bm = 1/Beta(Lam)
 ax2.plot(Beta(Lam), Lam,ls='-',label='Solar',color='r')
 
 # plot other bounds
-dat = np.loadtxt("data/limits/casimir.dat", delimiter=',')
+dat = np.loadtxt("data/casimir.dat", delimiter=',')
 print(dat[:,1])
 #ax2.plot(dat[:,0],dat[:,1],ls=':',label='Casimir')
 
-dat = np.loadtxt("data/limits/interferometry.dat", delimiter=',')
+dat = np.loadtxt("data/interferometry.dat", delimiter=',')
 ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='Interferometry')
 
-dat = np.loadtxt("data/limits/lfs.dat", delimiter=',')
+dat = np.loadtxt("data/lfs.dat", delimiter=',')
 ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='LFS')
 
-dat = np.loadtxt("data/limits/torsionbalance.dat", delimiter=',')
+dat = np.loadtxt("data/torsionbalance.dat", delimiter=',')
 ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='Torsion Balance')
 
 # axes
