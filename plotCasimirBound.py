@@ -21,6 +21,7 @@ v = np.logspace(1e-20,1e0,nticks)
 
 # plot DE scale
 ax2.hlines(2.4e-3, 1e-1, 1e18, color='black', ls='-',zorder=10)
+ax2.text(1e11,3e-3,r'$\Lambda=\Lambda_{\mathrm{DM}}$')
 
 # plot "cutoff"
 Lam = np.logspace(-18,1,100)
