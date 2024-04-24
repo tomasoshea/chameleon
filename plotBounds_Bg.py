@@ -42,6 +42,7 @@ dat = loadtxt("data/Eloss_Bm--1.dat")
 #dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
 Bg = sqrt(Lsolar*3/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', color='m',label='Solar energy loss')
+print(Bg)
 
 
 #dat = loadtxt("data/CAST_totalflux.dat")
