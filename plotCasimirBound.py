@@ -17,11 +17,12 @@ nticks=100
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.add_axes((.1,.1,.8,.8))
 #ax2.set(xlim=(1e-1,1e18), ylim=(1e-8, 1e1))
-ax2.set(xlim=(1e-1,1e7), ylim=(1e-5, 1e-1))
+ax2.set(xlim=(1e-1,1e7), ylim=(1e-7, 1e-1))
 v = np.logspace(1e-20,1e0,nticks)
 
 # plot DE scale
 ax2.hlines(2.4e-3, 1e-1, 1e18, color='black', ls='-',zorder=10)
+ax2.text(3e-1,3e-3,r'$\Lambda=\Lambda_{\mathrm{DM}}$',zorder=10)
 #ax2.text(1e11,3e-3,r'$\Lambda=\Lambda_{\mathrm{DM}}$')
 
 # plot "cutoff"
@@ -30,22 +31,21 @@ def Beta(L):
 	return 4.85532e9 * pow(L,1.53724)
 np.vectorize(Beta)
 #Bm = 1/Beta(Lam)
-ax2.plot(Beta(Lam), Lam,ls='-',label='Solar',color='r')
+ax2.fill_between(Beta(Lam),Lam,1e15,ls='-',label='This work',color='r',alpha=0.5,hatch='+++',zorder=0.1)
 
 # plot other bounds
 dat = np.loadtxt("data/casimir.dat", delimiter=',')
 print(dat[:,1])
 #ax2.plot(dat[:,0],dat[:,1],ls=':',label='Casimir')
-ax2.text(3e-1,3e-3,r'$\Lambda=\Lambda_{\mathrm{DM}}$')
 
 dat = np.loadtxt("data/interferometry.dat", delimiter=',')
-ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='Interferometry')
+ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ls=':',label='Interferometry')
 
 dat = np.loadtxt("data/lfs.dat", delimiter=',')
-ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='LFS')
+ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ls=':',label='LFS',zorder=0.2)
 
 dat = np.loadtxt("data/torsionbalance.dat", delimiter=',')
-ax2.plot(1/dat[:,0],dat[:,1],ls=':',label='Torsion Balance')
+ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ls=':',label='Torsion Balance')
 
 # axes
 ax2.set_xlabel(r'$\beta_m$')
@@ -54,7 +54,7 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/casimirplot_Bm--reduced.jpg')
+plt.savefig('plots/casimirplot_Bm--fill--reduced.jpg')
 plt.show()
 
 

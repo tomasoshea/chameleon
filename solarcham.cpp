@@ -488,8 +488,8 @@ void CAST_Brax() {
 double mCham2_B( int c, double Bg ) {
 	//if(n==0) { cout<<"ERROR! n = 0"<<endl; return 0; }
 	double E4n = pow(E,4+n);
-	double B = Bfield(c);
-	//double B = B0;
+	//double B = Bfield(c);
+	double B = B0;
 	return n*(n+1)*E4n* pow( (2*Bm*rho[c] + Bg*B*B)/(2*n*Mpl*E4n), (n+2)/(n+1) );
 }
 
@@ -660,7 +660,7 @@ void Eloss() {
 	double dw = 1e1;
 	n = 1;
 	double w1, w2, r1, r2 = 0;
-	for( double Bm = 1e0; Bm <= 1e4; Bm*=1.1 ) {
+	for( double Bm = 1e-1; Bm <= 1e4; Bm*=1.1 ) {
 		double total = 0;
 		for( int j = wp.size()-1; j >= 0; j-- ){
 			w1 = wp[j];
@@ -717,7 +717,7 @@ void Eloss_Bg() {
 		cout<<"Bg = "<<Bg<<endl;
 	}
 	// write to file
-	string name = "data/Eloss_Bg--1.dat";
+	string name = "data/Eloss_Bg--constB.dat";
 	write2D( name , mass, Q );
 }
 
@@ -926,7 +926,7 @@ int main() {
 
 	//spectrum('B');
 	//profile('B');
-	Eloss_Bg();
+	Eloss();
 	return 0;
 }
 

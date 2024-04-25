@@ -41,7 +41,11 @@ Lsolar *= J2eV*s2eV
 
 dat = loadtxt("data/Eloss_Bg--1.dat")
 Bg = np.sqrt(3*Lsolar/100/dat[:,1])
-ax2.plot(dat[:,0],Bg, ls='-', label=r'$n=1$')
+ax2.plot(dat[:,0],Bg, ls='-', label=r'Couviat $B$')
+
+dat = loadtxt("data/Eloss_Bg--constB.dat")
+Bg = np.sqrt(3*Lsolar/100/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls='-', label=r'Const $B=3\times10^3$T')
 
 # lower limit
 plt.vlines(1e10,1e0,1e20,color='r')
@@ -58,5 +62,5 @@ ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.legend()
 
-plt.savefig('plots/Eloss_Bg.jpg')
+plt.savefig('plots/Eloss_Bg--constB.jpg')
 plt.show()
