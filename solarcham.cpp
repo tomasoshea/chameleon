@@ -651,6 +651,39 @@ void spectrum( char option ) {
 }
 
 
+// calculate differential particle flux spectrum dN/dw by intg over solar volume
+// units Bg-2
+// total L+T spectrum
+void total_spectrum() {
+	vector<double> count, energy;
+	string name;
+	Bm = 1e2;				// cham matter coupling
+	n = 1;					// cham model n
+	double w1, w2 = 0;
+	double r1, r2 = rSolar;
+	for( int j = wp.size()-1; j >=0; j-- ){
+		w1 = wp[j];
+		if(w2 > w1) { continue; }
+		else{
+		r1 = r[j];
+		energy.push_back(w1);
+		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1))
+						+ T_solarIntg(w1,Bm) );
+		r2 = r[j];
+		w2 = wp[j];
+		}
+	}
+	double dw = 1e0;
+	for( double w = w2; w < 2e4; w+=dw ){
+		energy.push_back(w);					// eV
+		count.push_back( T_solarIntg(w,Bm) );	// Bg-2
+		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+	}
+	// write to file
+	name = "data/total_spectrum_1e2.dat";
+	write2D( name , energy, count );
+}
+
 // calculate total energy loss rate as a function of Bm
 // both L and T
 // units eV2 Bm-2
@@ -926,7 +959,8 @@ int main() {
 
 	//spectrum('B');
 	//profile('B');
-	Eloss();
+	//Eloss();
+	total_spectrum();
 	return 0;
 }
 
