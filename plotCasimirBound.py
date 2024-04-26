@@ -31,7 +31,7 @@ def Beta(L):
 	return 4.85532e9 * pow(L,1.53724)
 np.vectorize(Beta)
 #Bm = 1/Beta(Lam)
-ax2.fill_between(Beta(Lam),Lam,1e15,ls='-',label='This work',color='r',alpha=0.5,hatch='+++',zorder=0.1)
+ax2.fill_between(Beta(Lam),Lam,1e15,ec='black',ls='-',label='This work',color='r',alpha=0.5,hatch='+++',zorder=0.1)
 
 # plot other bounds
 dat = np.loadtxt("data/casimir.dat", delimiter=',')
@@ -39,13 +39,13 @@ print(dat[:,1])
 #ax2.plot(dat[:,0],dat[:,1],ls=':',label='Casimir')
 
 dat = np.loadtxt("data/interferometry.dat", delimiter=',')
-ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ls=':',label='Interferometry')
+ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ec='black',ls='-',label='Interferometry')
 
 dat = np.loadtxt("data/lfs.dat", delimiter=',')
-ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ls=':',label='LFS',zorder=0.2)
+ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ec='black',ls='-',label='LFS',zorder=0.2)
 
 dat = np.loadtxt("data/torsionbalance.dat", delimiter=',')
-ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ls=':',label='Torsion Balance')
+ax2.fill_between(1/dat[:,0],dat[:,1],1e15,ec='black',ls='-',label='Torsion Balance')
 
 # axes
 ax2.set_xlabel(r'$\beta_m$')
