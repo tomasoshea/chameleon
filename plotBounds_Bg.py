@@ -37,17 +37,21 @@ ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
 
 # add CAST
 ax1.hlines(5.74e10, 1e0, 1e11, color='black', ls='-', label='CAST')
+ax1.text(2e0,3.3e10,"CAST (2019)")
 
 dat = loadtxt("data/Eloss_Bm--1.dat")
 #dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
 Bg = sqrt(Lsolar*3/100/dat[:,1])
 ax1.plot(dat[:,0],Bg, ls='-', color='r',label='This work')
-print(Bg)
+ax1.text(2e0,6e9,"This work")
 
 # add other limits
 ax1.add_patch( Rectangle( (2e1, 1e-3), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )
+ax1.text(1.3e0,2e8,"TB")
 ax1.add_patch( Rectangle( (3e2, 1e-3), 1e11, 1e12, color='b', alpha=0.4, label='Atom interferometry') )
+ax1.text(2e3,2e8,"AI")
 ax1.add_patch( Rectangle( (5.88, 1e-3), 619, 1e12, color='g', alpha=0.4, label='Levitated force sensor') )
+ax1.text(3e1,2e8,"LFS")
 
 # axes
 ax1.set_xlabel(r'Matter coupling $\beta_m$')
@@ -79,7 +83,8 @@ ax2.set_xlabel(r'Matter coupling $\beta_m$')
 #ax2.set_ylabel(r'Photon coupling $\beta_\gamma$')
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-ax2.legend(loc='lower right')
+#ax2.legend(loc='lower right')
 
-plt.savefig('plots/solarLimits_n1n4.jpg')
+plt.tight_layout()
+plt.savefig('plots/solarLimits_n1n4.pdf')
 plt.show()

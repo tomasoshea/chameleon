@@ -67,7 +67,7 @@ nbar = np.zeros(len(ne))
 nbar+=ne
 for i in range(len(Z)):
 	nbar+=Z[i]*Z[i]*ionDensities[i]		
-
+nbar2 = nbar - ne
 # compute plasma frequency
 wp2 = np.multiply(( 4 * pi * a / (me) ) , ne)
 wp = np.sqrt(wp2)
@@ -84,5 +84,7 @@ np.savetxt('data/nHe4.dat', nHe4, delimiter=',')
 np.savetxt('data/nHe3.dat', nHe3, delimiter=',')
 np.savetxt('data/rho.dat', rho, delimiter=',')
 np.savetxt('data/nbar.dat', nbar, delimiter=',')
+np.savetxt('data/nbar2.dat', nbar2, delimiter=',')
+
 
 

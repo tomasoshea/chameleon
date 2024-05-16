@@ -30,6 +30,7 @@ double ngamma0 = 1e25*m2eV*m2eV*s2eV;			// photon flux at r0 [eV3]
 // solar model
 vector<double> ne = read("data/ne.dat");		// electron number density [eV3]
 vector<double> nbar = read("data/nbar.dat");	// Z2-summed number density [eV3]
+vector<double> nbar2 = read("data/nbar2.dat");	// Z2-summed number density minus electrons [eV3]
 vector<double> wp = read("data/wp.dat");		// plasma frequency [eV]
 vector<double> T = read("data/T.dat");			// solar temperature [eV]
 vector<double> r = read("data/r.dat");			// radial distance [eV-1]
@@ -128,7 +129,7 @@ double L_integrand( int c, double Bm, double kgamma ) {
 	double vArg = K2/(2*kphi*kgamma);		// v for curlyD
 	double Dyuv = curlyD(yArg,vArg);
 
-	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar[c] * T[c]
+	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * T[c]
 			* kphi * Dyuv;		// [eV Bg-2]
 }
 
@@ -285,7 +286,7 @@ double integrand_ll( int c, double Bm, double kgamma ) {
 	double K2 = 8*pi*alpha*nec/Tc;		// Debye screening scale ^2 [eV2]
 	if( 2*mg2 <= ms2 ) { cout<<ms2-(2*mg2)<<endl; return 0;}
 	//return 1/(36*Mpl*Mpl*pi*pi) * pow(K2,3/2) * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
-	return 1/(4*Mpl*Mpl*pi*pi) * kgamma*kgamma * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
+	return 1/(8*Mpl*Mpl*pi*pi) * kgamma*kgamma * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
 }
 
 
@@ -937,8 +938,8 @@ void spectrum_ll() {
 		if(w2 > w1) { continue; }
 		else{
 		r1 = r[j];
-		energy.push_back(w1);
-		count.push_back( kIntg_ll(Bm, j) * abs((r2-r1)/(w2-w1)) );
+		energy.push_back(2*w1);
+		count.push_back( kIntg_ll(Bm, j) * abs((r2-r1)/(w2-w1))/2 );
 		r2 = r[j];
 		w2 = wp[j];
 		}
@@ -957,10 +958,10 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
-	//spectrum('B');
+	spectrum('L');
 	//profile('B');
 	//Eloss();
-	total_spectrum();
+	spectrum_ll();
 	return 0;
 }
 
