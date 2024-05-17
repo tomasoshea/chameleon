@@ -49,22 +49,22 @@ def F(E,q):
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.subplots()
 #ax2.set(xlim=(2e-3,2e1), ylim=(1e14, 1e24))
-size = 300
-E = np.linspace(-340,-240,size)	# eV
-q = np.linspace(1e3,5e3,size)	# eV
+size = 100
+E = np.linspace(-250,-230,size)	# eV
+q = np.linspace(1e3,2e3,size)	# eV
 conts = np.zeros((size,size))
 for i in range(size):
 	for j in range(size):
 		val = F(E[j],q[i])
-		if val > 1e-3: conts[i,j] = F(E[i],q[j])
+		if val > 1e-5: conts[i,j] = F(E[i],q[j])
 
 #print(conts)
 lines = [1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]
-cs = ax2.contourf(q,E,conts,lines, locator=ticker.LogLocator())
+cs = ax2.contourf(q/1e3,E,conts,lines, locator=ticker.LogLocator())
 ax2.set_xlabel(r'$q$ [keV]')
 ax2.set_ylabel(r'$E$ [eV]')
 fig2.colorbar(cs)
-plt.savefig('plots/screening-lowq.pdf')
+#plt.savefig('plots/screening-lowq.jpg')
 plt.show()
 
 
