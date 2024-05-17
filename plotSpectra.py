@@ -40,10 +40,10 @@ ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B')
 ax2.text(1e-1,1e20,"B")
 
 # LL coalescence & L-primakoff 
-datL = loadtxt("data/L_spectrum_1e2.dat")
+datL = loadtxt("data/L_spectrum_1e2--test.dat")
 wpmax = np.max(datL[:,0])
 
-dat = loadtxt("data/coalescence_ll_spectrum_1e2.dat")
+dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
 for i in range(len(dat[:,0])):
 	if dat[i,0] < wpmax:
 		dat[i,1] = np.nan
@@ -60,10 +60,31 @@ ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="L")
 #plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],color='r')
 ax2.text(2e-2,1e22,"L")
 
+
+"""
+datL = loadtxt("data/L_spectrum_1e2--test.dat")
+wpmax = np.max(datL[:,0])
+
+#dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
+for i in range(len(dat[:,0])):
+	if dat[i,0] < wpmax:
+		dat[i,1] = np.nan
+	else:
+		dat[i,1] = dat[i,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L-L coalescence")
+plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls='-',color='r')
+
+dat = datL
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+for i in range(len(dat[:,0])):
+	if dat[i,0] > 288: dat[i,0] = np.nan
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L")
+#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],color='r')
+
 #dat = loadtxt("data/coalescence_lt_spectrum_1e2--uncapped.dat")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label="L-T coalescence")
 
-
+"""
 # axes
 ax2.set_xlabel("Scalar energy [keV]")
 ax2.set_ylabel(r'$\beta_\gamma^{-2}\; \frac{\mathrm{d}\dot{N}}{\mathrm{d}\omega}$ [s$^{-1}$ keV$^{-1}$]')	#[m-2 s-1 eV-1]")

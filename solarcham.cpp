@@ -150,8 +150,9 @@ double T_solarIntg( double w, double Bm ) {
 double kIntg( double Bm, int c ) {
 	double total = 0;
 	double kD = sqrt(8*pi*alpha*nbar[c]/T[c]);
+	//double kD = sqrt(8*pi*alpha*nbar[c]/me);
 	double dk = kD/1000;
-	for( double k = dk; k < kD; k+= dk ) {
+	for( double k = dk; k < kD/10; k+= dk ) {
 		//cout << k << endl;
 		total += 0.5 * dk * (L_integrand(c, Bm, k+dk) + L_integrand(c, Bm, k));
 	}
@@ -348,9 +349,10 @@ double solarIntg_lt( double w, double Bm ) {
 // integral over k_gamma for l-plasmon
 double kIntg_ll( double Bm, int c ) {
 	double total = 0;
-	double kD = sqrt(8*pi*alpha*ne[c]/T[c]);
+	double kD = sqrt(8*pi*alpha*nbar[c]/T[c]);
+	//double kD = sqrt(8*pi*alpha*nbar[c]/me);
 	double dk = kD/1000;
-	for( double k = dk; k < kD; k+= dk ) {
+	for( double k = dk; k < kD/10; k+= dk ) {
 		//cout << k << endl;
 		total += 0.5 * dk * (integrand_ll(c, Bm, k+dk) + integrand_ll(c, Bm, k));
 	}
@@ -645,7 +647,7 @@ void spectrum( char option ) {
 	}
 	// write to file
 	if (option=='T') { name = "data/T_spectrum_1e2.dat"; }
-	else if (option=='L') { name = "data/L_spectrum_1e2.dat"; }
+	else if (option=='L') { name = "data/L_spectrum_1e2--test.dat"; }
 	else if (option=='B') { name = "data/B_spectrum_1e2.dat"; }
 	
 	write2D( name , energy, count );
@@ -945,7 +947,7 @@ void spectrum_ll() {
 		}
 	}
 	// write to file
-	string name = "data/coalescence_ll_spectrum_1e2.dat";
+	string name = "data/coalescence_ll_spectrum_1e2--test.dat";
 	write2D( name , energy, count );
 }
 

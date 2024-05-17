@@ -71,7 +71,9 @@ nbar2 = nbar - ne
 # compute plasma frequency
 wp2 = np.multiply(( 4 * pi * a / (me) ) , ne)
 wp = np.sqrt(wp2)
-
+# compute Debye screening scale
+kappa2 = 4*pi*a*nbar/T
+kappa = np.sqrt(kappa2)
 
 # save computed data
 np.savetxt('data/rFrac.dat', rFrac, delimiter=',')
@@ -85,6 +87,8 @@ np.savetxt('data/nHe3.dat', nHe3, delimiter=',')
 np.savetxt('data/rho.dat', rho, delimiter=',')
 np.savetxt('data/nbar.dat', nbar, delimiter=',')
 np.savetxt('data/nbar2.dat', nbar2, delimiter=',')
+np.savetxt('data/kappa.dat', kappa, delimiter=',')
+
 
 
 
