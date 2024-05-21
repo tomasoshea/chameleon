@@ -7,6 +7,7 @@ import numpy as np
 from scipy.special import dawsn
 from matplotlib import pyplot as plt
 from matplotlib import ticker
+from scipy import integrate
 
 plt.style.use("style.txt")
 
@@ -22,8 +23,8 @@ Ts = np.loadtxt("data/T.dat")
 r = np.loadtxt("data/r.dat")
 wp = np.loadtxt("data/wp.dat")
 
-c = 195		# r = 0.1 rSolar
-
+c = 500#195		# r = 0.1 rSolar
+m = 0
 
 # real part of self-E
 def RePi(E, q, ni, mi, T):
@@ -45,27 +46,40 @@ def F(E,q):
 	return -2*Ve/(1-np.exp(-E/T)) * iPi / ( (1-Ve*rPi)**2 + (Ve*iPi)**2 )
 #F = np.vectorize(F)
 
+def xintegrand(x, E, q, w):
+	k = np.sqrt(w*w - m*m)
+	y = q/k
+	u = 0.5*(y + 1/y)
+	qi = np.sqrt(k*k + q*q - 2*x*q*k)
+	return np.power(x-y,2)/(u-x) * F(w-E,qi)
+
+def integrand(E, q, w):
+	k = np.sqrt(w*w - m*m)
+	I = integrate.quad(xintegrand,-1,1,args=(E, q, w))
+	return 1/2/(2*pi)**3 *q*k*k*F(E,q)*F(w-E,k-q) * I[0]
+
+def rate(w):
+	I = integrate.dblquad(integrand, 0, np.inf, 0, np.inf, args=(w,))
+	return I[0]
+
 # plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.subplots()
-#ax2.set(xlim=(2e-3,2e1), ylim=(1e14, 1e24))
-size = 200
-E = np.linspace(-260,-240,size)	# eV
-q = np.linspace(7e2,1e3,size)	# eV
-conts = np.zeros((size,size))
+ax2.set_xlabel(r'$\omega_\phi$ [eV]')
+ax2.set_ylabel(r'$\Gamma/V\phi$ [eV3]')
+#ax2.set_xscale('log')
+ax2.set_yscale('log')
+
+size=200
+wphi = np.linspace(300,2000,size)
+G = np.zeros(size)
 for i in range(size):
-	for j in range(size):
-		val = F(E[j],q[i])
-		if val > 1e-5: conts[i,j] = F(E[i],q[j])
+	print(wphi[i])
+	G[i] = rate(wphi[i])
+#G = rate(300)
+print(G)
 
-ax2.hlines(-wp[c],0.7,1)
-#print(conts)
-lines = [1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]
-cs = ax2.contourf(q/1e3,E,conts,lines, locator=ticker.LogLocator())
-ax2.set_xlabel(r'$q$ [keV]')
-ax2.set_ylabel(r'$E$ [eV]')
-fig2.colorbar(cs)
-plt.savefig('plots/screening-lowq.jpg')
+plt.plot(wphi,G)
+plt.savefig('plots/eephi_c500.jpg')
+plt.tight_layout()
 plt.show()
-
-
