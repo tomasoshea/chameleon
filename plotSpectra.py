@@ -30,15 +30,16 @@ T2eV = 2e-16 * 1e18#		// Tesla to eV2 conversion [eV2/T]
 # Electron/Ion T
 dat = loadtxt("data/T_spectrum_1e2.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--', label="T")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--')
 ax2.text(2e0,5e21,"T")
 
 # B-field
 dat = loadtxt("data/B_spectrum_1e2.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='B')
-ax2.text(1e-1,1e20,"B")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.')
+ax2.text(2e-2,6e16,"B")
 
+"""
 # LL coalescence & L-primakoff 
 datL = loadtxt("data/L_spectrum_1e2--test.dat")
 wpmax = np.max(datL[:,0])
@@ -49,8 +50,8 @@ for i in range(len(dat[:,0])):
 		dat[i,1] = np.nan
 	else:
 		dat[i,1] = dat[i,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="L-L coalescence")
-plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls='-',color='r')
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="L-L coalescence")
+#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls='-',color='r')
 
 dat = datL
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
@@ -59,7 +60,24 @@ for i in range(len(dat[:,0])):
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="L")
 #plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],color='r')
 ax2.text(2e-2,1e22,"L")
+"""
 
+dat = loadtxt("data/L_spectrum_1e2--test.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
+ax2.text(2e-2,1e22,"L")
+
+dat = loadtxt("data/L_spectrum_1e2--omega_unbounded.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L unbounded')
+
+#dat = loadtxt("data/L_spectrum_1e2--omega_bounded1.dat")
+#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L bounded (kD)')
+
+dat = loadtxt("data/L_spectrum_1e2--omega_kD.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L bounded (kD)')
 
 """
 datL = loadtxt("data/L_spectrum_1e2--test.dat")
@@ -90,8 +108,8 @@ ax2.set_xlabel("Scalar energy [keV]")
 ax2.set_ylabel(r'$\beta_\gamma^{-2}\; \frac{\mathrm{d}\dot{N}}{\mathrm{d}\omega}$ [s$^{-1}$ keV$^{-1}$]')	#[m-2 s-1 eV-1]")
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-#ax2.legend()
+ax2.legend(loc='lower right')
 
 plt.tight_layout()
-#plt.savefig('plots/spectrum_LTB-2.pdf')
+plt.savefig('plots/spectrum_newL.jpg')
 plt.show()

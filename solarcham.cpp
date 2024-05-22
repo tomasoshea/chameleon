@@ -118,7 +118,8 @@ double T_integrand( int c, double Bm, double w ) {
 // units eV Bg-2
 double L_integrand( int c, double Bm, double kgamma ) {
 	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
-	double w = wp[c];						// omega is plasma freq
+	//double w = wp[c];						// omega is plasma freq [eV]
+	double w = sqrt( pow(wp[c],2) + 3*T[c]*kgamma*kgamma/me );	// corrected omega [eV]
 	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
 	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
 	if( w*w <= ms2 ) { return 0; }
@@ -131,6 +132,9 @@ double L_integrand( int c, double Bm, double kgamma ) {
 
 	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * T[c]
 			* kphi * Dyuv;		// [eV Bg-2]
+	// MODIFIED
+	//return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * kphi
+	//		* pow(w,3/2) * Dyuv / (exp(w/T[c]) - 1);
 }
 
 // integral over solar volume, for a given scalar mass and energy
@@ -151,14 +155,55 @@ double kIntg( double Bm, int c ) {
 	double total = 0;
 	double kD = sqrt(8*pi*alpha*nbar[c]/T[c]);
 	//double kD = sqrt(8*pi*alpha*nbar[c]/me);
-	double dk = kD/1000;
-	for( double k = dk; k < kD/10; k+= dk ) {
+	double kmax = kD/10;
+	double dk = kmax/1000;
+	for( double k = dk; k < kmax; k+= dk ) {
 		//cout << k << endl;
 		total += 0.5 * dk * (L_integrand(c, Bm, k+dk) + L_integrand(c, Bm, k));
 	}
+	
 	return total;
 }
 
+// MODIFIED
+// differential scalar production rate on earth d2N/dr/dw divided by beta_gamma^2
+// AS ABOVE BUT IN w NOT K
+// units eV Bg-2
+double L_integrand_omega( int c, double Bm, double w ) {
+	double Tc = T[c];
+	if( Tc==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
+	double wpc = wp[c];
+	if(w<wpc) { return 0; }
+	//double w = wp[c];						// omega is plasma freq [eV]
+	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
+	if( w*w <= ms2 ) { return 0; }
+	double K2 = 4*pi*alpha*nbar[c]/Tc;		// Debye screening scale ^2 [eV2]
+	double kD = sqrt(4*pi*alpha*ne[c]/Tc);
+	//double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
+	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
+	double kgamma = sqrt( me/3/Tc * (w*w - wpc*wpc) );	// kL from corrected omega [eV]
+	if( kgamma > kD ) { return 0; }
+	double yArg = kgamma/kphi;				// y for curlyD
+	double vArg = K2/(2*kphi*kgamma);		// v for curlyD
+	double Dyuv = curlyD(yArg,vArg);
+	//if( kgamma == 0 ) { Dyuv = 0;}//32*kgamma*kgamma/3/(kphi*kphi + K2); }
+	//cout << "kgamma = "<<kgamma<<endl; 
+	//cout<<kgamma<<endl;
+	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * me/3/Tc
+			* kphi *w*w/(exp(w/Tc) - 1) * Dyuv/kgamma;		// [eV Bg-2]
+}
+
+// integral over solar volume, for a given scalar mass and energy
+// returns dN/dw Bg-2
+// units Bg-2
+double L_solarIntg( double w, double Bm ) {
+	double total = 0;
+	for( int c = 0; c < r.size() - 1; c++ ) {
+		total += 0.5 * (r[c+1] - r[c]) * (L_integrand_omega(c+1, Bm, w) + L_integrand_omega(c, Bm, w));
+	}
+	return total;		// [Bg-2]
+}
 
 
 
@@ -358,6 +403,67 @@ double kIntg_ll( double Bm, int c ) {
 	}
 	return total;
 }
+
+// A(y,u) for coalescence
+// dimensionless
+double A( double y, double u ){
+	return pow(u-y,2)*log((u+1)/(u-1)) - 2*u + 4*y;
+}
+
+// differential scalar production rate on earth d2N/dr/dk times Lambda2
+// LL COALESCENCE WITH w1 INTG.
+// units eV2 Bm-2
+double integrand_ll_omega( int c, double Bm, double w, double w1 ) {
+	double Tc = T[c];
+	double rc = r[c];
+	double nec = ne[c];
+	double wpc = wp[c];
+	if( Tc==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
+	if( w1<wpc ) { return 0; }					// min w is wp
+	if( w<2*wpc ) { return 0; }					// min w is wp
+	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	double kphi = sqrt(w*w - ms2);			// phi momentum [eV]
+	double kgamma = sqrt( me/3/Tc * (w*w - wpc*wpc) );
+	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
+	double K2 = 8*pi*alpha*nec/Tc;		// Debye screening scale ^2 [eV2]
+	double yArg = kgamma/kphi;
+	double uArg = yArg/2 + 1/yArg/2;
+	double Ayu = A(yArg,uArg);
+	double w2 = w - w1;						// [eV]
+	return 1/(16*Mpl*Mpl*pi*pi) * me/3/Tc * rc*rc * kphi*kphi
+			* w1*w1/(exp(w1/Tc)-1) * w2/(exp(w2/Tc)-1) * Ayu;
+}
+
+
+// integral over all w1
+// returns dN/dr [eV2]
+double w1Intg( int c, double w, double Bm ) {
+	double total = 0;
+	double dw1 = 1;
+	double w1 = wp[c];
+	while( true ) {
+		double I1 = integrand_ll_omega(c, Bm, w, w1+dw1);
+		double I0 = integrand_ll_omega(c, Bm, w, w1);
+		if( I1 + I0 == 0 ) { break; }
+		total += 0.5 * dw1 * (I0 + I1);
+		w1+=dw1;
+		//cout<<I1+I0<<endl;
+	}
+	return total;	// [eV2]
+}
+
+
+// integral over solar volume, for a given scalar mass and energy
+// returns N Bg-2 [eV]
+double solarIntg_ll_omega( double w, double Bm ) {
+	double total = 0;
+	for( int c = 0; c < r.size() - 1; c++ ) {
+		total += 0.5 * (r[c+1] - r[c]) * (w1Intg(c+1, Bm, w) + w1Intg(c, Bm, w));
+	}
+	return total;		// [eV Bg-2]
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -647,10 +753,26 @@ void spectrum( char option ) {
 	}
 	// write to file
 	if (option=='T') { name = "data/T_spectrum_1e2.dat"; }
-	else if (option=='L') { name = "data/L_spectrum_1e2--test.dat"; }
+	else if (option=='L') { name = "data/L_spectrum_1e2--test3.dat"; }
 	else if (option=='B') { name = "data/B_spectrum_1e2.dat"; }
 	
 	write2D( name , energy, count );
+}
+
+// as above for L-w case
+void spectrumL() {
+	vector<double> count, energy;
+	string name;
+	Bm = 1e2;		// cham matter coupling
+	n = 1;					// cham model n
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
+		energy.push_back(w);					// eV
+		count.push_back( L_solarIntg(w,Bm) );	// Bg-2
+		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+	}
+	name = "data/L_spectrum_1e2--omega_kD.dat";
+	write2D( name , energy, count );	
 }
 
 
@@ -952,6 +1074,24 @@ void spectrum_ll() {
 }
 
 
+// ll spectrum for omega intg
+void spectrum_ll_omega() {
+	vector<double> count, energy;
+	Bm = 1e2;		// cham matter coupling (or fixed scalar mass)
+	n = 1;					// cham model n
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
+		energy.push_back(w);					// eV
+		count.push_back( (solarIntg_ll_omega(w+dw,Bm) - solarIntg_ll_omega(w,Bm))/dw );		// Bg-2
+		//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		cout<<"w = "<<w<<"eV of 20keV"<<endl;
+	}
+	// write to file
+	string name = "data/coalescence_ll_spectrum_omega.dat";
+	write2D( name , energy, count );
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -960,10 +1100,11 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
-	spectrum('L');
+	//spectrum('L');
+	spectrumL();
 	//profile('B');
 	//Eloss();
-	spectrum_ll();
+	//spectrum_ll_omega();
 	return 0;
 }
 
