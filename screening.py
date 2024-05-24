@@ -50,22 +50,23 @@ fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.subplots()
 #ax2.set(xlim=(2e-3,2e1), ylim=(1e14, 1e24))
 size = 200
-E = np.linspace(-260,-240,size)	# eV
-q = np.linspace(7e2,1e3,size)	# eV
+E = np.linspace(240,260,size)	# eV
+q = np.linspace(200,1000,size)	# eV
 conts = np.zeros((size,size))
 for i in range(size):
 	for j in range(size):
 		val = F(E[j],q[i])
-		if val > 1e-5: conts[i,j] = F(E[i],q[j])
+		if val > 1e-500: conts[i,j] = F(E[i],q[j])
+print(conts)
 
-ax2.hlines(-wp[c],0.7,1)
+#ax2.hlines(-wp[c],0.7,1)
 #print(conts)
 lines = [1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]
-cs = ax2.contourf(q/1e3,E,conts,lines, locator=ticker.LogLocator())
+cs = ax2.contourf(q/1e3,E,conts, locator=ticker.LogLocator())
 ax2.set_xlabel(r'$q$ [keV]')
 ax2.set_ylabel(r'$E$ [eV]')
 fig2.colorbar(cs)
-plt.savefig('plots/screening-lowq.jpg')
+#plt.savefig('plots/screening-lowq.jpg')
 plt.show()
 
 

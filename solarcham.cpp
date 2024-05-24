@@ -17,9 +17,9 @@ double zeta3 = 1.202056903159594;				// Riemann zeta(3)
 // solar parameters
 double dSolar = 149.5978707e9/m2eV;				// mean earth-sun distance [eV-1]
 double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
-double B0 = 3e3*T2eV;							// radiative zone max B [eV2]
-double B1 = 50*T2eV;							// tachocline max B [eV2]
-double B2 = 3*T2eV;								// outer region max B [eV2]
+double B0 = 3e3*T2eV;	//200*T2eV;						// radiative zone max B [eV2]
+double B1 = 50*T2eV;							// tachocline max B [eV2]  4*T2eV;//
+double B2 = 3*T2eV;								// outer region max B [eV2]  3*T2eV;//
 double r0 = 0.712*rSolar;						// [eV-1]
 double r1 = 0.732*rSolar;						// [eV-1]
 double d1 = 0.02*rSolar;						// [eV-1]
@@ -183,7 +183,7 @@ double L_integrand_omega( int c, double Bm, double w ) {
 	//double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
 	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
 	double kgamma = sqrt( me/3/Tc * (w*w - wpc*wpc) );	// kL from corrected omega [eV]
-	if( kgamma > kD ) { return 0; }
+	if( kgamma > sqrt(K2)/10 ) { return 0; }
 	double yArg = kgamma/kphi;				// y for curlyD
 	double vArg = K2/(2*kphi*kgamma);		// v for curlyD
 	double Dyuv = curlyD(yArg,vArg);
@@ -426,6 +426,7 @@ double integrand_ll_omega( int c, double Bm, double w, double w1 ) {
 	double kgamma = sqrt( me/3/Tc * (w*w - wpc*wpc) );
 	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
 	double K2 = 8*pi*alpha*nec/Tc;		// Debye screening scale ^2 [eV2]
+	//if( kgamma >= sqrt(K2)/10 ) { cout<<"wut"<<endl;return 0; }
 	double yArg = kgamma/kphi;
 	double uArg = yArg/2 + 1/yArg/2;
 	double Ayu = A(yArg,uArg);
@@ -1084,7 +1085,7 @@ void spectrum_ll_omega() {
 		energy.push_back(w);					// eV
 		count.push_back( (solarIntg_ll_omega(w+dw,Bm) - solarIntg_ll_omega(w,Bm))/dw );		// Bg-2
 		//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-		cout<<"w = "<<w<<"eV of 20keV"<<endl;
+		//cout<<"w = "<<w<<"eV of 20keV"<<endl;
 	}
 	// write to file
 	string name = "data/coalescence_ll_spectrum_omega.dat";
@@ -1100,11 +1101,11 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
-	//spectrum('L');
-	spectrumL();
+	//spectrum('B');
+	//spectrumL();
 	//profile('B');
 	//Eloss();
-	//spectrum_ll_omega();
+	//spectrum_ll();
 	return 0;
 }
 
