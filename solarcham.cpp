@@ -7,12 +7,6 @@
 
 using namespace std;
 
-// constants
-double pi = 3.14159265359;
-double alpha = 1/137.035999084;
-double me = 510998.950;							// e- mass [eV]
-double Mpl = 2e27;   							// planck mass [eV]
-double zeta3 = 1.202056903159594;				// Riemann zeta(3)
 
 // solar parameters
 double dSolar = 149.5978707e9/m2eV;				// mean earth-sun distance [eV-1]

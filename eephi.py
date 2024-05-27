@@ -31,7 +31,13 @@ m = 0
 
 # real part of self-E
 def RePi(E, q, ni, mi, T):
-	return -2*ni/q * np.sqrt(mi/2/T) * ( dawsn(np.sqrt(mi/2/T)*(E/q + q/2/mi)) - dawsn(np.sqrt(mi/2/T)*(E/q - q/2/mi)) )
+	arg1 = np.sqrt(mi/2/T)*(E/q + q/2/mi)
+	arg2 = np.sqrt(mi/2/T)*(E/q - q/2/mi)
+	if arg1>=0: daw1 = dawsn(arg1)
+	elif arg1<0: daw1 = -dawsn(-arg1)
+	if arg2>=0: daw2 = dawsn(arg2)
+	elif arg2<0: daw2 = -dawsn(-arg2)
+	return -2*ni/q * np.sqrt(mi/2/T) * ( daw1 - daw2 )
 RePi = np.vectorize(RePi)
 
 # imaginary part of self-E
@@ -41,8 +47,8 @@ ImPi = np.vectorize(ImPi)
 
 # electron F(E,q)
 def F(E,q):
-	if E <=0: return 0
-	if q <=0: return 0
+	if E ==0: return 0
+	if q ==0: return 0
 	#if E > q: return 0
 	#if (E/q < q/2/me): return 0
 	Ve = 4*pi*alpha/q/q
@@ -58,8 +64,8 @@ def xintegrand(x, E, q, w):
 	y = q/k
 	u = 0.5*(y + 1/y)
 	qi = np.sqrt(k*k + q*q - 2*x*q*k)
-	if qi <=0: return 0
-	if E>=w: return 0
+	#if qi <=0: return 0
+	#if E>=w: return 0
 	if u<1.01: return (1-x) * F(w-E,qi)
 	I = np.power(x-y,2)/(u-x) * F(w-E,qi)
 	#print("x={}, k={}, E={}, I={}".format(x,k,w-E,I))
@@ -78,24 +84,46 @@ def integrand(E, q, w):
 	return 1/2/(2*pi)**3 *q*k2*F(E,q) * I[0]
 
 def integrand2(qi, q, E, w, k):
-	if q <= 0: return 0
-	if E <= 0: return 0
-	if qi <= 0: return 0
-	if w-E <= 0: return 0
+	#if q <= 0: return 0
+	#if E <= 0: return 0
+	#if qi <= 0: return 0
+	#if w-E <= 0: return 0
 	I = 1/4/np.power(2*pi,3) * np.power(k*k - q*q - qi*qi, 2)/q/qi * F(E,q) * F(w-E,qi)
 	if I <= 0: return 0
 	return I
+
+def integrand3(q, E, w, k):
+	if q == 0: return 0
+	if E == 0: return 0
+	#if qi <= 0: return 0
+	#if w-E <= 0: return 0
+	qi = np.sqrt(q*q + k*k)
+	#print(q)
+	#print(F(E,q))
+	I = 1/4/np.power(2*pi,3) * np.power(k*k - q*q - qi*qi, 2)/q/qi * F(E,q) * F(w-E,qi)
+	#if I <= 0: return 0
+	return I
+	
 	
 def rate(w):
 	I = integrate.dblquad(integrand, 0, np.inf, 0, np.inf, args=(w,))
 	return I[0]
+
 
 def rate2(w,cSolar):
 	c = cSolar
 	k = np.sqrt(w*w - m*m)
 	qmax = lambda E,q: np.sqrt(q*q + k*k + 2*k*q)
 	qmin = lambda E,q: np.sqrt(q*q + k*k - 2*k*q)
-	I = integrate.tplquad(integrand2, 0, w, 0, np.inf, qmin, qmax, args=(w,k))
+	I = integrate.tplquad(integrand2, 0, np.inf, 0, np.inf, qmin, qmax, args=(w,k))
+	return I[0]
+
+# simplified rate, removing angular intg. by averaging to x=0
+def rate3(w,cSolar):
+	c = cSolar
+	k = np.sqrt(w*w - m*m)
+	I1 = lambda E: integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k),limit=1000)[0]
+	I = integrate.quad(I1, -np.inf, np.inf,limit=1000)
 	return I[0]
 
 # plot
@@ -104,16 +132,28 @@ ax2 = fig2.subplots()
 ax2.set_xlabel(r'$\omega_\phi$ [eV]')
 ax2.set_ylabel(r'$\Gamma/V\omega$ [eV3]')
 #ax2.set_xscale('log')
-ax2.set_yscale('log')
+#ax2.set_yscale('log')
 
-size=100
+size=int(1e4)
 G = np.zeros(size)
-wphi = np.linspace(1,600,size)
-for i in range(size):
-	if wphi[i] > 220 and wphi[i] < 520: continue
-	print(wphi[i])
-	G[i] = rate2(wphi[i],195)
-#G = rate2(220,195)
+#wphi = np.linspace(1,600,size)
+#for i in range(size):
+#	if wphi[i] > 220 and wphi[i] < 520: continue
+#	print(wphi[i])
+#	G[i] = rate2(wphi[i],195)
+w = 300
+#E = 55
+#E = w
+GE = np.zeros(size)
+for E in range(0,size,1):
+	print(E)
+	k = np.sqrt(w*w - m*m)
+	#GE[q] = q
+	#G[q] = integrand3(q, E, w, k)
+	GE[E] = E
+	G[E] = integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k))[0]
+	
+#G = integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k))[0]
 #print(wp[c])
 print(G)
 #G = F(245,170000)
@@ -131,15 +171,17 @@ for i in range(size):
 	#G[i] = integrate.dblquad(integrand2,0,np.inf,qmin,qmax,args=(E, w, k))[0]
 	G[i] = integrate.quad(integrand2,qmin,qmax,args=(q, E, w, k))[0]
 print(G)
-"""
+
 
 ymin = np.nanmin(G)
 ymax = np.nanmax(G)
 
 plt.vlines(wp[c],ymin,ymax,color='orange')
-
-#ax2.plot(qarr,G)
-plt.plot(wphi,G)
+"""
+ymax = np.nanmax(G)
+ax2.set(xlim=(0,size), ylim=(0, ymax))
+ax2.plot(GE,G)
+#plt.plot(wphi,G)
 #plt.savefig('plots/eephi_Eintg.jpg')
 plt.tight_layout()
 plt.show()

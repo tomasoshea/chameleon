@@ -9,6 +9,14 @@
 
 using namespace std;
 
+// constants
+double pi = 3.14159265359;						// fine structure constant
+double alpha = 1/137.035999084;
+double me = 510998.950;							// e- mass [eV]
+double Mpl = 2e27;   							// planck mass [eV]
+double zeta3 = 1.202056903159594;				// Riemann zeta(3)
+
+
 // conversion factors
 double s2eV = (6.582119569e-16);	// Hz to eV
 double J2eV = (1. / 1.602176634e-19);	// Joules to eV (1 / e)
@@ -169,4 +177,15 @@ void writeREST( string name, vector<double> data, int line ){	// data vector nee
 	if( line == 0 ){ cout << "writing to file " << name << "...\n" << endl; }
 	
 	fout.close();
+}
+
+// Dawson integral
+double Dawson( double x ) {
+	double total = 0;
+	double dy = x/100;
+	for( double y = 0; y < x; y+= dy ) {
+		total += 0.5*dy*( exp(pow(y,2)) + exp(pow(y+dy,2)) );
+		//cout<<total<<endl;
+	}
+	return exp(-x*x)*total;
 }
