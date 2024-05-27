@@ -89,6 +89,3 @@ np.savetxt('data/nbar.dat', nbar, delimiter=',')
 np.savetxt('data/nbar2.dat', nbar2, delimiter=',')
 np.savetxt('data/kappa.dat', kappa, delimiter=',')
 
-
-
-

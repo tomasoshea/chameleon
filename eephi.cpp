@@ -23,30 +23,35 @@ double RePi( double E, double q, double ni, double mi, double T ) {
 	double arg1 = sqrt(mi/2/T)*(E/q + q/2/mi);
 	double arg2 = sqrt(mi/2/T)*(E/q - q/2/mi);
 	double I = -2*ni/q * sqrt(mi/2/T) * ( gsl_sf_dawson(arg1) - gsl_sf_dawson(arg2) );
-	return I;
+	return Zis*Zis*I;
 }
 
 double ImPi( double E, double q, double ni, double mi, double T ) {
 	double I =  -ni*sqrt(2*pi/mi/T)*mi/q
 		* exp( -(pow(mi*E/q,2) + pow(q/2,2))/(2*mi*T) ) * sinh(E/2/T);
-	return I;
+	return Zis*Zis*I;
 }
 
 double F( double E, double q, int cs ) {
 	double Ve = 4*pi*alpha/q/q;
 	double T = Ts[cs];
-	double ni = ne[cs];
-	double iPi = ImPi(E,q,ni,me,T);
-	double rPi = RePi(E,q,ni,me,T);
-	if(abs(E)<1e-10) { return Ve/pow((1-Ve*rPi),2); }
-	return -2*Ve/(1-exp(-E/T)) * iPi / ( pow((1-Ve*rPi),2) + pow((Ve*iPi),2) );
+	double I = 0
+	for( int i = 0; i<=3; i++ ) {
+		ions(i);
+		double ni = nis[cs];
+		double iPi = ImPi(E,q,ni,mis,T);
+		double rPi = RePi(E,q,ni,mis,T);
+		if(abs(E)<1e-10) { I += (Ve*ni/q*sqrt(2*pi*mi/T)*exp(-q*q/8/mi/T) /pow((1-Ve*rPi),2)); }
+		I += ( -2*Ve/(1-exp(-E/T)) * iPi / ( pow((1-Ve*rPi),2) + pow((Ve*iPi),2) ) );
+	}
+	return I;
 }
 
 // simplified integrand with averaged x=>0
 double integrand3( double E, double q, double w, double k, int cs ) {
-	if(q==0) {return 0;}
+	if(q==0) { return 0; }
 	double qi = sqrt(q*q + k*k);	// averaged to x=>0
-	if(qi==0) {return 0;}
+	if(qi==0) { return 0; }
 	double I = pow(2*pi,-3)/4 * pow(k*k - q*q - qi*qi, 2)/q/qi * F(E,q,cs) * F(w-E,qi,cs)/Mpl/Mpl;
 	if(print) {cout<<I<<endl;}
 	return I;
