@@ -14,7 +14,7 @@ fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 #ax2 = fig2.add_axes((.15,.15,.8,.8))
 ax2 = fig2.subplots()
 #ax2.set(xlim=(1e-3,2e1), ylim=(1e-4, 9e5))
-ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 1e22))
+#ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 1e22))
 #ax2.set(xlim=(0,2e1), ylim=(0, 1.5e3))		# T linear limits
 
 
@@ -42,6 +42,11 @@ dat2 = loadtxt("data/B_spectrum_1e2--lowB.dat")
 dat2[:,1] = dat2[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
 ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='orange', ls='-.')
 plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='orange', alpha=0.3)
+
+# LL
+dat = loadtxt("data/LLspectrum_core.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV/Mpl	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
 
 """
 # LL coalescence & L-primakoff 
@@ -84,24 +89,24 @@ ax2.text(2e-2,1e22,"L")
 #ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L bounded (kD)')
 
 
-datL = loadtxt("data/L_spectrum_1e2--omega_kD.dat")
-wpmax = np.max(datL[:,0])
-wpmax = 275
-dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
-for i in range(len(dat[:,0])):
-	if dat[i,0] < wpmax:
-		dat[i,1] = np.nan
-	else:
-		dat[i,1] = dat[i,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L-L coalescence")
-plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls=':',color='r')
-
-dat = datL
-dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-for i in range(len(dat[:,0])):
-	if dat[i,0] > wpmax: dat[i,0] = np.nan
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L")
-ax2.text(2e-2,4e18,"L")
+#datL = loadtxt("data/L_spectrum_1e2--omega_kD.dat")
+#wpmax = np.max(datL[:,0])
+#wpmax = 275
+#dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
+#for i in range(len(dat[:,0])):
+#	if dat[i,0] < wpmax:
+#		dat[i,1] = np.nan
+#	else:
+#		dat[i,1] = dat[i,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L-L coalescence")
+#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls=':',color='r')
+#
+#dat = datL
+#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+#for i in range(len(dat[:,0])):
+#	if dat[i,0] > wpmax: dat[i,0] = np.nan
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L")
+#ax2.text(2e-2,4e18,"L")
 #plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],color='r')
 
 #dat = loadtxt("data/coalescence_lt_spectrum_1e2--uncapped.dat")
@@ -116,5 +121,5 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-plt.savefig('plots/spectrum_newL.jpg')
+#plt.savefig('plots/spectrum_newL.jpg')
 plt.show()

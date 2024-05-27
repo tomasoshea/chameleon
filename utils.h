@@ -5,6 +5,7 @@
 #include <sstream>
 #include <math.h> 
 #include <filesystem>
+#include <gsl/gsl_sf_dawson.h>
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -24,6 +25,10 @@ double m2eV = (1.973269804e-7);	// m-1 to eV
 double K2eV = (8.617333262e-5);	// Kelvin to eV
 double kg2eV = 5.609588604e35;	// from hbar/c2
 double T2eV = 2e2;		// Tesla to eV2 conversion [eV2/T]
+
+// solar parameters
+double dSolar = 149.5978707e9/m2eV;				// mean earth-sun distance [eV-1]
+double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 
 
 // read in datafiles in csv form
@@ -177,15 +182,4 @@ void writeREST( string name, vector<double> data, int line ){	// data vector nee
 	if( line == 0 ){ cout << "writing to file " << name << "...\n" << endl; }
 	
 	fout.close();
-}
-
-// Dawson integral
-double Dawson( double x ) {
-	double total = 0;
-	double dy = x/100;
-	for( double y = 0; y < x; y+= dy ) {
-		total += 0.5*dy*( exp(pow(y,2)) + exp(pow(y+dy,2)) );
-		//cout<<total<<endl;
-	}
-	return exp(-x*x)*total;
 }

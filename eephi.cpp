@@ -15,79 +15,140 @@ vector<double> r = read("data/r.dat");			// radial distance [eV-1]
 
 int c = 0;
 double m = 0;
+double thres = 1e-6;
+bool print = false;
+
 
 double RePi( double E, double q, double ni, double mi, double T ) {
 	double arg1 = sqrt(mi/2/T)*(E/q + q/2/mi);
 	double arg2 = sqrt(mi/2/T)*(E/q - q/2/mi);
-	double daw1, daw2;
-	if(arg1>=0) { daw1 = Dawson(arg1); }
-	else if(arg1<0) { daw1 = -Dawson(-arg1); }
-	if(arg2>=0) { daw2 = Dawson(arg2); }
-	else if(arg2<0) { daw2 = -Dawson(-arg2); }
-	//cout<<daw2<<endl;
-	//if(isnan(daw1) or isnan(daw2)) {return 0;}
-	//cout<<daw1<<endl;
-	return -2*ni/q * sqrt(mi/2/T) * ( daw1 - daw2 );
+	double I = -2*ni/q * sqrt(mi/2/T) * ( gsl_sf_dawson(arg1) - gsl_sf_dawson(arg2) );
+	return I;
 }
 
 double ImPi( double E, double q, double ni, double mi, double T ) {
 	double I =  -ni*sqrt(2*pi/mi/T)*mi/q
 		* exp( -(pow(mi*E/q,2) + pow(q/2,2))/(2*mi*T) ) * sinh(E/2/T);
-	//if(isnan(I)) {return 0;}
 	return I;
 }
 
-double F( double E, double q ) {
+double F( double E, double q, int cs ) {
 	double Ve = 4*pi*alpha/q/q;
-	double T = Ts[c];
-	double ni = ne[c];
+	double T = Ts[cs];
+	double ni = ne[cs];
 	double iPi = ImPi(E,q,ni,me,T);
 	double rPi = RePi(E,q,ni,me,T);
-	//cout<<rPi<<endl;
+	if(abs(E)<1e-10) { return Ve/pow((1-Ve*rPi),2); }
 	return -2*Ve/(1-exp(-E/T)) * iPi / ( pow((1-Ve*rPi),2) + pow((Ve*iPi),2) );
 }
 
 // simplified integrand with averaged x=>0
-double integrand3( double E, double q, double w, double k ) {
-	if(E==0) {return 0;}
+double integrand3( double E, double q, double w, double k, int cs ) {
 	if(q==0) {return 0;}
 	double qi = sqrt(q*q + k*k);	// averaged to x=>0
 	if(qi==0) {return 0;}
-	double I = 1/4/pow(2*pi,3) * pow(k*k - q*q - qi*qi, 2)/q/qi * F(E,q) * F(w-E,qi);
-	cout<<"E=F(E,q)<<endl;
+	double I = pow(2*pi,-3)/4 * pow(k*k - q*q - qi*qi, 2)/q/qi * F(E,q,cs) * F(w-E,qi,cs)/Mpl/Mpl;
+	if(print) {cout<<I<<endl;}
 	return I;
 }
 
-double q_integral3( double w, double E ) {
+double q_integral3( double w, double E, int cs ) {
 	double k = sqrt(w*w-m*m);
 	double total = 0;
-	double thres = 1e-10;
-	double dq = 1;
+	double dq = E/10;
+	int i = 0;
+	double q = 0;
+	double iminus = integrand3(E,q,w,k,cs);
+	double iplus = 0;
 	while(true) {
-		double q = 0;
-		double I = 0.5*dq*(integrand3(E,q+dq,w,k) + integrand3(E,q,w,k));
+		iplus = integrand3(E,q+dq,w,k,cs);
+		double I = 0.5*dq*(iplus + iminus);
 		total+=I;
-		cout<<"total = "<<total<<"	I = "<<I<<endl;
+		//cout<<"total = "<<total<<"	I = "<<I<<endl;
 		if(I/total <= thres) {break;}
+		if( i>=1000 && total==0 ) { break; }
+		iminus = iplus;
+		//if( E==w ) {cout<<"total = "<<total<<"	I = "<<I<<endl;}
+		q+=dq;
+		i++;
+	}
+	//cout<<total<<endl;
+	return total;
+}
+
+double E_integral3( double w, int cs ) {
+	double total = 0;
+	double dE = w/100;
+	double E = 0;
+	int i = 0;
+	double iminus = q_integral3(w,E,cs);
+	double iplus = 0;
+	while(true) {
+		iplus = q_integral3(w,E+dE,cs);
+		double I = 0.5*dE*(iplus + iminus);
+		total+=I;
+		//cout<<"w = "<<w<<"	E = "<<E<<"	total = "<<total<<"	I = "<<I<<endl;
+		if(I/total <= thres) {break;}
+		if( i>=1000 && total==0 ) { break; }
+		iminus = iplus;
+		E+=dE;
+		i++;
+	}
+	//cout<<total<<endl;
+	return total;
+}
+
+double r_integral3( double w ) {
+	double total = 0;
+	int dc = 10;
+	double iminus = E_integral3(w,0);
+	double iplus = 0;
+	for( int cs=0; cs<r.size()-1; cs+=dc ) {
+		iplus = E_integral3(w,cs+dc);
+		double I = 0.5*(r[cs+1]-r[cs])*(iplus + iminus);
+		total+=I;
+		//cout<<"r = "<<r[cs]/rSolar<<" r_solar	total = "<<total<<endl;
+		if(I/total <= thres) {break;}
+		iminus = iplus;
 	}
 	return total;
 }
 
-double E_integral3( double w ) {
-	double total = 0;
-	double thres = 1e-99;
-	double dE = 1;
-	while(true) {
-		double E = 0;
-		double I = 0.5*dE*(q_integral3(w,E+dE) + q_integral3(w,E));
-		total+=I;
-		if(I/total <= thres) {break;}
+void fixedR( int cs ) {
+	vector<double> count, energy;
+	string name;
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
+		energy.push_back(w);					// eV
+		count.push_back( E_integral3(w,cs) );	// Bg-2
+		if((int)(w) % (int)(1e2) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		//cout<<"w = "<<w<<"eV of 20keV"<<endl;
 	}
-	return total;
+	name = "data/LLspectrum_half.dat";
+	write2D( name , energy, count );	
 }
+
+void fullR() {
+	vector<double> count, energy;
+	string name;
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
+		energy.push_back(w);			
+		count.push_back( r_integral3(w) );
+		//if((int)(w) % (int)(1e2) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+		cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl;
+	}
+	name = "data/LLspectrum--1e-6.dat";
+	write2D( name , energy, count );	
+}
+
 
 int main() {
-	double I = q_integral3(1000,500);
-	cout<<I<<endl;
+	//double I = E_integral3(20,0);
+	//double I = q_integral3(20,20,0);
+	//double I = r_integral3(1000);
+	//cout<<I<<endl;
+	//fixedR(998);	// r = 0.5 rSolar
+	fullR();
 	return 0;
 }

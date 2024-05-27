@@ -9,8 +9,6 @@ using namespace std;
 
 
 // solar parameters
-double dSolar = 149.5978707e9/m2eV;				// mean earth-sun distance [eV-1]
-double rSolar = 6.957e8/m2eV;					// solar radius [eV-1]
 double B0 = 3e3*T2eV;	//200*T2eV;						// radiative zone max B [eV2]
 double B1 = 50*T2eV;							// tachocline max B [eV2]  4*T2eV;//
 double B2 = 3*T2eV;								// outer region max B [eV2]  3*T2eV;//
