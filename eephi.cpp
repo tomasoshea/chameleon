@@ -16,6 +16,7 @@ vector<double> r = read("data/r.dat");			// radial distance [eV-1]
 
 int c = 0;
 double m = 0;
+double ms2 = 0;
 double thres = 1e-4;
 bool print = false;
 
@@ -23,7 +24,10 @@ bool print = false;
 double RePi( double E, double q, double ni, double mi, double T ) {
 	double arg1 = sqrt(mi/2/T)*(E/q + q/2/mi);
 	double arg2 = sqrt(mi/2/T)*(E/q - q/2/mi);
-	double I = -2*ni/q * sqrt(mi/2/T) * ( gsl_sf_dawson(arg1) - gsl_sf_dawson(arg2) );
+	double daw1, daw2;
+	daw1 = gsl_sf_dawson(arg1);
+	daw2 = gsl_sf_dawson(arg2);
+	double I = -2*ni/q * sqrt(mi/2/T) * ( daw1 - daw2 );
 	return Zis*Zis*I;
 }
 
@@ -46,7 +50,7 @@ double F( double E, double q, int cs ) {
 	//	I += ( -2*Ve/(1-exp(-E/T)) * iPi / ( pow((1-Ve*rPi),2) + pow((Ve*iPi),2) ) );
 	//}
 	//return I;
-	ions(1);
+	ions(0);
 	double ni = nis[cs];
 	double iPi = ImPi(E,q,ni,mis,T);
 	double rPi = RePi(E,q,ni,mis,T);
@@ -90,43 +94,60 @@ double q_integral3( double w, double E, int cs ) {
 	return total;
 }
 
-//struct args{
-//	double E;
-//	double w;
-//	double k;
-//	int cs;
-//};
-//
-//double integrand3( double q, void * params ) {
-//	args& recs = *(args*)params;
-//	double E = recs.E;
-//	double w = recs.w;
-//	double k = recs.k;
-//	double cs = recs.cs;
-//	if(q==0) { return 0; }
-//	double qi = sqrt(q*q + k*k);	// averaged to x=>0
-//	if(qi==0) { return 0; }
-//	double I = pow(2*pi,-3)/4 * pow(k*k - q*q - qi*qi, 2)/q/qi * F(E,q,cs) * F(w-E,qi,cs)/Mpl/Mpl;
-//	if(print) {cout<<I<<endl;}
-//	return I;
-//}
-//
-//double q_integral3( double w, double E, int cs ) {
-//	double k = sqrt(w*w-m*m);
-//	gsl_integration_workspace * work = gsl_integration_workspace_alloc (1000);
-//	double result, error;
-//	args qargs;
-//	qargs.E = E;
-//	qargs.k = k;
-//	qargs.w = w;
-//	qargs.cs = cs;
-//	gsl_function F;
-//	F.function = &integrand3;
-//	F.params = &qargs;
-//	//gsl_integration_qagiu(&F, 0, 0, 1e-6, 1000, work, &result, &error);
-//	gsl_integration_qagi(&F, 0, 1e-2, 1000, work, &result, &error);
-//	return result;
-//}
+struct args{
+	double q;
+	double E;
+	double w;
+	double k;
+	int cs;
+};
+
+double integrand3_gsl( double x, void * params ) {
+	args& recs = *(args*)params;
+	double E = recs.E;
+	double q = recs.q;
+	double w = recs.w;
+	double k = recs.k;
+	double cs = recs.cs;
+	double rc = r[cs];
+	double yArg = q/k;
+	double uArg = 1/2/yArg + yArg/2;
+	if(q==0) { return 0; }
+	double qi = sqrt(q*q + k*k - 2*x*q*k);
+	if(qi==0) { return 0; }
+	double I = pow(k*rc/2/pi/Mpl,2) * q * pow(x-yArg,2)/(uArg-x) * F(E,q,cs) * F(w-E,qi,cs);
+	return I;
+}
+
+double x_integral3_gsl( double E, void * params ) {
+	args& recs = *(args*)params;
+	recs.E = E;
+	//cout<<recs.E<<endl;
+	gsl_integration_workspace * work = gsl_integration_workspace_alloc (1000);
+	double result, error;
+	gsl_function F;
+	F.function = &integrand3_gsl;
+	F.params = &recs;
+	//gsl_integration_qagiu(&F, 0, 0, 1e-6, 1000, work, &result, &error);
+	//gsl_integration_qagi(&F, 0, 1e-2, 10000, work, &result, &error);
+	gsl_integration_qag(&F,-1,1,0,1e-3,1000,6,work,&result,&error);
+	return result;
+}
+
+double E_integral3_gsl( double q, void * params ) {
+	args& recs = *(args*)params;
+	recs.q = q;
+	gsl_integration_workspace * work = gsl_integration_workspace_alloc (1000);
+	double result, error;
+	gsl_function F;
+	F.function = &x_integral3_gsl;
+	F.params = &recs;
+	//gsl_integration_qagiu(&F, 0, 0, 1e-6, 1000, work, &result, &error);
+	gsl_integration_qagi(&F, 0, 1e-2, 1000, work, &result, &error);
+	//gsl_integration_qag(&F,-1,1,0,1e-5,1000,6,work,&result,&error);
+	return result;
+}
+
 
 double E_integral3( double w, int cs ) {
 	double total = 0;
@@ -166,6 +187,27 @@ double r_integral3( double w ) {
 	return total;
 }
 
+
+double A( double y, double u ) { return pow(u-y,2)*log((u+1)/(u-1)) - 2*u + 4*y; }
+
+
+double lowq_integrand( int c, double q ) {
+	double Tc = Ts[c];
+	double rc = r[c];
+	if( Tc==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
+	double mg = wp[c];
+	//if( 2*mg2 <= ms2 ) { cout<<ms2-(2*mg2)<<endl; return 0; }
+	double yArg = q/sqrt(4*mg*mg - ms2);
+	double uArg = 1/2/yArg + yArg/2;
+	return 1/(4*Mpl*Mpl) * Tc*Tc * rc*rc * (4*mg*mg - ms2) * q * A(yArg,uArg);	// /4/pi/pi
+}
+
+
+//double highq_integrand( int c, double q ) {
+//
+//}
+
+
 void fixedR( int cs ) {
 	vector<double> count, energy;
 	string name;
@@ -197,9 +239,16 @@ void fullR() {
 
 int main() {
 	//double I = E_integral3(20,0);
-	//double I = q_integral3(20,20,0);
-	double I = r_integral3(1000);
+	args qargs;
+	double w = 300;
+	qargs.k = w;
+	qargs.w = w;
+	qargs.cs = 0;
+	qargs.q = 1000;
+	double I = E_integral3_gsl(qargs.q,&qargs);
+	//double I = r_integral3(1000);
 	cout<<I<<endl;
+
 	//fixedR(998);	// r = 0.5 rSolar
 	//fullR();
 	return 0;

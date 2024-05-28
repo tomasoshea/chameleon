@@ -26,7 +26,7 @@ Ts = np.loadtxt("data/T.dat")
 r = np.loadtxt("data/r.dat")
 wp = np.loadtxt("data/wp.dat")
 
-c = 0#195		# r = 0.1 rSolar
+c = 195		# r = 0.1 rSolar
 m = 0
 
 # real part of self-E
@@ -45,6 +45,13 @@ ImPi = np.vectorize(ImPi)
 def F(E,q):
 	T = Ts[c]
 	ni = ne[c]
+	wpc = wp[c]
+	#if q*q/2/me/wpc < 1:
+#	if (E>(wpc-5)) and (E<(wpc+5)): return pi*T
+#		elif (E>(-wpc-5)) and (E<(-wpc+5)): return pi*T
+#		else: return 0
+#	else: 
+	#print('here!')
 	Ve = 4*pi*alpha/q/q
 	iPi = ImPi(E,q,ni,me,T)
 	rPi = RePi(E,q,ni,me,T)
@@ -85,15 +92,13 @@ def integrand2(qi, q, E, w, k):
 	if I <= 0: return 0
 	return I
 
-def integrand3(q, E, w, k):
-	#if qi <= 0: return 0
-	#if w-E <= 0: return 0
+def integrand3(E, q, w, k):
+	if q==0: return 0
 	qi = np.sqrt(q*q + k*k)
-	#print(q)
-	#print(F(E,q))
-	I = 1/4/np.power(2*pi,3) * np.power(k*k - q*q - qi*qi, 2)/q/qi * F(E,q) * F(w-E,qi)
-	#if I <= 0: return 0
-	return I
+	if qi==0: return 0
+	wpc = wp[c]
+	Tc = Ts[c]
+	return 1/4/np.power(2*pi,3) * np.power(k*k - q*q - qi*qi, 2)/q/qi * F(E,q) * F(w-E,qi)
 	
 	
 def rate(w):
@@ -109,11 +114,34 @@ def rate2(w,cSolar):
 	I = integrate.tplquad(integrand2, 0, np.inf, 0, np.inf, qmin, qmax, args=(w,k))
 	return I[0]
 
+def Eintegral3(q,w,k):
+	delta1 = False
+	delta2 = False
+	wpc = wp[c]
+	Tc = Ts[c]
+	qi = np.sqrt(q*q + k*k)
+	if q*q/2/me/wpc < 1: delta1 = True
+	if qi*qi/2/me/wpc < 1: delta2 = True
+	if delta1*delta2 == False: 
+		print("neither")
+		return integrate.quad(integrand3, -np.inf, np.inf, args=(q,w,k),limit=1000)[0]
+	elif delta1 and not delta2:
+		print("just 1")
+		return pi*Tc/4/np.power(2*pi,3) * np.power(k*k - q*q - qi*qi, 2)/q/qi * (F(wpc,qi) + F(-wpc,qi))
+	elif delta2 and not delta1:
+		print("just 2")
+		return pi*Tc/4/np.power(2*pi,3) * np.power(k*k - q*q - qi*qi, 2)/q/qi * (F(wpc,q) + F(-wpc,q))
+	elif delta1*delta2:
+		#print("both")
+		return 0
+	
+
+
 # simplified rate, removing angular intg. by averaging to x=0
 def rate3(w,cSolar):
 	c = cSolar
 	k = np.sqrt(w*w - m*m)
-	I1 = lambda E: integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k),limit=1000)[0]
+	I1 = lambda q: integrate.quad(Eintegral3, -np.inf, np.inf, args=(q,w,k),limit=1000)[0]
 	I = integrate.quad(I1, -np.inf, np.inf,limit=1000)
 	return I[0]
 
@@ -131,23 +159,24 @@ ax2.set_ylabel(r'$\Gamma/V\omega$ [eV3]')
 #	if wphi[i] > 220 and wphi[i] < 520: continue
 #	print(wphi[i])
 #	G[i] = rate2(wphi[i],195)
-w = 450
-size=int(2*w)
+w = 60*wp[c]
+size=int(10*w)
 G = np.zeros(size)
 #E = 55
 #E = w
 GE = np.zeros(size)
-for E in range(0,size,1):
-	#print(E)
+for q in range(0,size,1):
+	#print(q)
 	k = np.sqrt(w*w - m*m)
 	#GE[q] = q
 	#G[q] = integrand3(q, E, w, k)
-	GE[E] = E
-	G[E] = integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k))[0]
+	GE[q] = q
+	G[q] = integrate.quad(Eintegral3, -np.inf, np.inf, args=(w,k))[0]
 	
 #G = integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k))[0]
 #print(wp[c])
 print(G)
+print(wp[c])
 ymin = np.nanmin(G)
 ymax = np.nanmax(G)
 plt.vlines(wp[c],ymin,ymax,color='green',ls=':')

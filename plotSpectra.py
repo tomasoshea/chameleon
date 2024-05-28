@@ -44,7 +44,8 @@ ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='orange', ls='-.')
 plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='orange', alpha=0.3)
 
 # LL
-dat = loadtxt("data/LLspectrum_core.dat")
+#dat = loadtxt("data/LLspectrum_core.dat")
+dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
 

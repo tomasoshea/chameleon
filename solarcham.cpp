@@ -386,10 +386,10 @@ double solarIntg_lt( double w, double Bm ) {
 // integral over k_gamma for l-plasmon
 double kIntg_ll( double Bm, int c ) {
 	double total = 0;
-	double kD = sqrt(8*pi*alpha*nbar[c]/T[c]);
-	//double kD = sqrt(8*pi*alpha*nbar[c]/me);
-	double dk = kD/1000;
-	for( double k = dk; k < kD/10; k+= dk ) {
+	double kMax = sqrt(2*me*wp[c])/1;
+	//double kMax = 4*pi
+	double dk = kMax/1000;
+	for( double k = dk; k < kMax; k+= dk ) {
 		//cout << k << endl;
 		total += 0.5 * dk * (integrand_ll(c, Bm, k+dk) + integrand_ll(c, Bm, k));
 	}
@@ -1090,14 +1090,14 @@ void spectrum_ll_omega() {
 
 int main() { 
 	// convert Gaunt factor Theta to T in eV
-	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
-	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
+	//for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
+	//for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//spectrum('B');
 	//spectrumL();
 	//profile('B');
 	//Eloss();
-	//spectrum_ll();
+	spectrum_ll();
 	return 0;
 }
 
