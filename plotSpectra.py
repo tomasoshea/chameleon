@@ -45,7 +45,7 @@ plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='orange', alpha=0.3
 
 # LL
 dat = loadtxt("data/LLspectrum_core.dat")
-dat[:,1] = dat[:,1]*1e3/s2eV/Mpl	# convert [eV/eV] to [s-1 keV-1]
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
 ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
 
 """

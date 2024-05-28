@@ -5,7 +5,6 @@
 #include <sstream>
 #include <math.h> 
 #include <filesystem>
-#include <gsl/gsl_sf_dawson.h>
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -16,6 +15,7 @@ double alpha = 1/137.035999084;
 double me = 510998.950;							// e- mass [eV]
 double Mpl = 2e27;   							// planck mass [eV]
 double zeta3 = 1.202056903159594;				// Riemann zeta(3)
+double amu =  931.494e6;						// amu in eV
 
 
 // conversion factors

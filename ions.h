@@ -16,14 +16,17 @@ double mHe3 = 3.0160293*amu;
 // solar model
 vector<double> ne = read("data/ne.dat");		// electron number density [eV3]
 vector<double> nH = read("data/nH.dat");		// electron number density [eV3]
+vector<double> nHe3 = read("data/nHe3.dat");		// electron number density [eV3]
+vector<double> nHe4 = read("data/nHe4.dat");		// electron number density [eV3]
+
 
 vector<double> nis;
 double mis;
 double Zis;
 
 void ions( int sel ) {
-	if(sel==0) { ni = ne; mi = me; Zi = 1; }
-	else if (sel==1) { nis = nH; mi = mH; Zi = 1; }
-	else if (sel==2) { nis = nHe3; mi = mHe3; Zi = 2; }
-	else if (sel==3) { nis = nHe4; mi = mHe4; Zi = 2; }
+	if(sel==0) { nis = ne; mis = me; Zis = 1; }
+	else if (sel==1) { nis = nH; mis = mH; Zis = 1; }
+	else if (sel==2) { nis = nHe3; mis = mHe3; Zis = 2; }
+	else if (sel==3) { nis = nHe4; mis = mHe4; Zis = 2; }
 }

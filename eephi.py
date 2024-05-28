@@ -26,18 +26,14 @@ Ts = np.loadtxt("data/T.dat")
 r = np.loadtxt("data/r.dat")
 wp = np.loadtxt("data/wp.dat")
 
-c = 195		# r = 0.1 rSolar
+c = 0#195		# r = 0.1 rSolar
 m = 0
 
 # real part of self-E
 def RePi(E, q, ni, mi, T):
 	arg1 = np.sqrt(mi/2/T)*(E/q + q/2/mi)
 	arg2 = np.sqrt(mi/2/T)*(E/q - q/2/mi)
-	if arg1>=0: daw1 = dawsn(arg1)
-	elif arg1<0: daw1 = -dawsn(-arg1)
-	if arg2>=0: daw2 = dawsn(arg2)
-	elif arg2<0: daw2 = -dawsn(-arg2)
-	return -2*ni/q * np.sqrt(mi/2/T) * ( daw1 - daw2 )
+	return -2*ni/q * np.sqrt(mi/2/T) * ( dawsn(arg1) - dawsn(arg2) )
 RePi = np.vectorize(RePi)
 
 # imaginary part of self-E
@@ -47,16 +43,13 @@ ImPi = np.vectorize(ImPi)
 
 # electron F(E,q)
 def F(E,q):
-	if E ==0: return 0
-	if q ==0: return 0
-	#if E > q: return 0
-	#if (E/q < q/2/me): return 0
-	Ve = 4*pi*alpha/q/q
 	T = Ts[c]
 	ni = ne[c]
+	Ve = 4*pi*alpha/q/q
 	iPi = ImPi(E,q,ni,me,T)
 	rPi = RePi(E,q,ni,me,T)
-	return -2*Ve/(1-np.exp(-E/T)) * iPi / ( (1-Ve*rPi)**2 + (Ve*iPi)**2 )
+	if np.abs(E)<1e-10: return (Ve*ni/q*np.sqrt(2*pi*me/T)*np.exp(-q*q/8/me/T) /pow((1-Ve*rPi),2))
+	else: return -2*Ve/(1-np.exp(-E/T)) * iPi / ( (1-Ve*rPi)**2 + (Ve*iPi)**2 )
 #F = np.vectorize(F)
 
 def xintegrand(x, E, q, w):
@@ -93,8 +86,6 @@ def integrand2(qi, q, E, w, k):
 	return I
 
 def integrand3(q, E, w, k):
-	if q == 0: return 0
-	if E == 0: return 0
 	#if qi <= 0: return 0
 	#if w-E <= 0: return 0
 	qi = np.sqrt(q*q + k*k)
@@ -134,19 +125,20 @@ ax2.set_ylabel(r'$\Gamma/V\omega$ [eV3]')
 #ax2.set_xscale('log')
 #ax2.set_yscale('log')
 
-size=int(1e4)
-G = np.zeros(size)
+
 #wphi = np.linspace(1,600,size)
 #for i in range(size):
 #	if wphi[i] > 220 and wphi[i] < 520: continue
 #	print(wphi[i])
 #	G[i] = rate2(wphi[i],195)
-w = 300
+w = 450
+size=int(2*w)
+G = np.zeros(size)
 #E = 55
 #E = w
 GE = np.zeros(size)
 for E in range(0,size,1):
-	print(E)
+	#print(E)
 	k = np.sqrt(w*w - m*m)
 	#GE[q] = q
 	#G[q] = integrand3(q, E, w, k)
@@ -156,6 +148,12 @@ for E in range(0,size,1):
 #G = integrate.quad(integrand3, -np.inf, np.inf, args=(E,w,k))[0]
 #print(wp[c])
 print(G)
+ymin = np.nanmin(G)
+ymax = np.nanmax(G)
+plt.vlines(wp[c],ymin,ymax,color='green',ls=':')
+plt.vlines(w-wp[c],ymin,ymax,color='orange',ls=':')
+plt.vlines(w,ymin,ymax,color='red',ls=':')
+
 #G = F(245,170000)
 
 """
