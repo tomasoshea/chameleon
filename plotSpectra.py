@@ -14,7 +14,7 @@ fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 #ax2 = fig2.add_axes((.15,.15,.8,.8))
 ax2 = fig2.subplots()
 #ax2.set(xlim=(1e-3,2e1), ylim=(1e-4, 9e5))
-#ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 1e22))
+ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 1e22))
 #ax2.set(xlim=(0,2e1), ylim=(0, 1.5e3))		# T linear limits
 
 
@@ -30,24 +30,24 @@ T2eV = 2e-16 * 1e18#		// Tesla to eV2 conversion [eV2/T]
 # Electron/Ion T
 dat = loadtxt("data/T_spectrum_1e2.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--')
-ax2.text(2e0,5e20,"T")
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
+ax2.text(3e0,4e20,"T")
 
 # B-field
 dat = loadtxt("data/B_spectrum_1e2.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1],color='orange', ls='-.')
+ax2.plot(dat[:,0]/1e3,dat[:,1],color='orange', ls='--')
 ax2.text(2e-2,6e16,"B")
 dat2 = loadtxt("data/B_spectrum_1e2--lowB.dat")
 dat2[:,1] = dat2[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='orange', ls='-.')
+ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='orange', ls='--')
 plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='orange', alpha=0.3)
 
-# LL
-#dat = loadtxt("data/LLspectrum_core.dat")
-dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
-dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
+## LL
+##dat = loadtxt("data/LLspectrum_tot.dat")
+#dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
+#dat[:,1] = dat[:,1]*1e3/s2eV/4/np.pi/np.pi	# convert [eV/eV] to [s-1 keV-1]
+#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
 
 """
 # LL coalescence & L-primakoff 
@@ -122,5 +122,5 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-#plt.savefig('plots/spectrum_newL.jpg')
+plt.savefig('plots/spectrum_TB.pdf')
 plt.show()

@@ -28,8 +28,12 @@ ax2.text(1.1e-1,3e-3,r'$\Lambda=\Lambda_{\mathrm{DE}}$',zorder=10)
 
 # plot "cutoff"
 Lam = np.logspace(-18,1,100)
-def Beta(L):
+def Beta2(L):
 	return 4.85532e9 * pow(L,1.53724)
+np.vectorize(Beta2)
+
+def Beta(L):
+	return pow(10,9.49285) * pow(L,1.66571)
 np.vectorize(Beta)
 #Bm = 1/Beta(Lam)
 ax2.fill_between(Beta(Lam),Lam,1e15,ec='black',ls='-',label='This work',color='r',alpha=0.5,hatch='++',zorder=0.1)
@@ -37,7 +41,7 @@ ax2.text(3e-1,1e-5,"This work")
 #ax2.text(1e0,1e-5,"This work")
 
 # plot other bounds
-dat = np.loadtxt("data/casimir.dat", delimiter=',')
+#dat = np.loadtxt("data/casimir.dat", delimiter=',')
 #print(dat[:,1])
 #ax2.plot(dat[:,0],dat[:,1],ls=':',label='Casimir')
 
@@ -61,7 +65,7 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-plt.savefig('plots/casimirplot_Bm--fill--reduced.pdf')
+plt.savefig('plots/casimirplot_Bm--fill--reduced--2.pdf')
 plt.show()
 
 

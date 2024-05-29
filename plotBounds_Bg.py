@@ -27,8 +27,8 @@ plt.style.use("style.txt")	# import plot style
 fig, (ax1,ax2) = plt.subplots(1, 2)	# display is 1920 x 1080 (16:9)
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 #ax2 = fig2.add_axes((.1,.1,.8,.8))
-ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
-ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
+ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e12))
+ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e12))
 
 
 ########################################
@@ -39,11 +39,20 @@ ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
 ax1.hlines(5.74e10, 1e0, 1e11, color='black', ls='-', label='CAST')
 ax1.text(2e0,3.3e10,"CAST (2019)")
 
-dat = loadtxt("data/Eloss_Bm--1.dat")
+dat = loadtxt("data/Eloss_Bm_T.dat")
 #dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
 Bg = sqrt(Lsolar*3/100/dat[:,1])
+print(Bg)
 ax1.plot(dat[:,0],Bg, ls='-', color='r',label='This work')
 ax1.text(2e0,6e9,"This work")
+dat = loadtxt("data/Eloss_Bm_TL.dat")
+Bg = sqrt(Lsolar*3/100/dat[:,1])
+print(Bg)
+ax1.plot(dat[:,0],Bg, ls=':', color='b')
+dat = loadtxt("data/Eloss_Bm_L.dat")
+Bg = sqrt(Lsolar*3/100/dat[:,1])
+print(Bg)
+ax1.plot(dat[:,0],Bg, ls=':', color='g')
 
 # add other limits
 ax1.add_patch( Rectangle( (2e1, 1e-3), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )
@@ -65,8 +74,9 @@ ax1.set_yscale('log')
 ############### n=4 ####################
 ########################################
 
-dat = loadtxt("data/Eloss_Bm--1.dat")
+dat = loadtxt("data/Eloss_Bm_T.dat")
 Bg = sqrt(Lsolar*3/100/dat[:,1])
+#print(Bg)
 ax2.plot(dat[:,0],Bg, ls='-',color='r', label='This work')
 
 # add CAST
@@ -86,5 +96,5 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-plt.savefig('plots/solarLimits_n1n4.pdf')
+#plt.savefig('plots/solarLimits_n1n4.pdf')
 plt.show()

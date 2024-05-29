@@ -322,9 +322,10 @@ double integrand_ll( int c, double Bm, double kgamma ) {
 	double mg2 = 4*pi*alpha*nec/me;		// assume mg2 = wp2
 	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
 	double K2 = 8*pi*alpha*nec/Tc;		// Debye screening scale ^2 [eV2]
-	if( 2*mg2 <= ms2 ) { cout<<ms2-(2*mg2)<<endl; return 0;}
+	if( 2*mg2 <= ms2 ) { cout<<ms2-(2*mg2)<<endl; return 0; }
 	//return 1/(36*Mpl*Mpl*pi*pi) * pow(K2,3/2) * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
 	return 1/(8*Mpl*Mpl*pi*pi) * kgamma*kgamma * Tc*Tc * rc*rc * sqrt(4*mg2 - ms2);
+			//* pow(exp(kgamma/wp[c])-1, -1);
 }
 
 
@@ -808,23 +809,17 @@ void total_spectrum() {
 void Eloss() {
 	vector<double> mass;
 	vector<double> Q;
-	double dw = 1e1;
+	double dw = 1e2;
 	n = 1;
-	double w1, w2, r1, r2 = 0;
-	for( double Bm = 1e-1; Bm <= 1e4; Bm*=1.1 ) {
+	for( double Bm = 1e-1; Bm <= 1e4; Bm*=10 ) {
 		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm) );
-			r2 = r[j];
-			w2 = wp[j];
-			}
+		for( int j = wp.size()-1; j > 0; j-- ){
+			total += 0.5*abs(r[j]-r[j-1])*( wp[j]*kIntg(Bm,j) + wp[j-1]*kIntg(Bm,j-1) )
+					+ 0.5*abs(wp[j]-wp[j-1])*(wp[j]*T_solarIntg(wp[j],Bm) + wp[j-1]*T_solarIntg(wp[j-1],Bm));
+			//total += 0.5*(w1-w2)*(w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm));	// only T
+			//total += 0.5*abs(r[j]-r[j-1])*( wp[j]*kIntg(Bm,j) + wp[j-1]*kIntg(Bm,j-1) );	// only L
 		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
+		for( double w = wp[0]; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*T_solarIntg(w+dw,Bm) + w*T_solarIntg(w,Bm) );
 		}
 		mass.push_back(Bm);
@@ -832,7 +827,7 @@ void Eloss() {
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/Eloss_Bm--1.dat";
+	string name = "data/Eloss_Bm_TL.dat";
 	write2D( name , mass, Q );
 }
 
@@ -919,26 +914,26 @@ void Eloss_Lambda() {
 	vector<double> Evec;
 	vector<double> Q;
 	double dw = 1e1;
-	double Bm = 1e0;
+	double Bm = 1e6;
 	n = 1;
 	E = 1e-8;
-	double w1, w2, r1, r2 = 0;
+	//double w1, w2, r1, r2 = 0;
 	while ( E <= 1e1 ) {
 		//if( (n<0) && ((int)n%2 != 0) ) { continue; }
 		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm) );
-			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
+		//for( int j = wp.size()-1; j >= 0; j-- ){
+		//	w1 = wp[j];
+		//	if(w2 >= w1) { continue; }
+		//	else{
+		//	r1 = r[j];
+		//	total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
+		//						 + w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm) );
+		//	if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
+		//	r2 = r[j];
+		//	w2 = wp[j];
+		//	}
+		//}
+		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*T_solarIntg(w+dw,Bm) + w*T_solarIntg(w,Bm) );
 			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		}
@@ -949,7 +944,7 @@ void Eloss_Lambda() {
 		E*=1.1;
 	}
 	// write to file
-	string name = "data/Eloss_Lambda--1e0.dat";
+	string name = "data/Eloss_Lambda_T--1e6.dat";
 	write2D( name, Evec, Q );
 }
 
@@ -1096,8 +1091,8 @@ int main() {
 	//spectrum('B');
 	//spectrumL();
 	//profile('B');
-	//Eloss();
-	spectrum_ll();
+	Eloss_Lambda();
+	//spectrum_ll();
 	return 0;
 }
 
