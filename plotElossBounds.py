@@ -42,18 +42,30 @@ Lsolar *= J2eV*s2eV
 dat = loadtxt("data/Eloss_Lambda_T--1e0.dat")
 Bg = np.sqrt(3*Lsolar/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', label=r'$n=1$, $\beta_m=10^0$')
+dat = loadtxt("data/Eloss_Lambda--1e0.dat")
+Bg = np.sqrt(3*Lsolar/100/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls=':')
 
 dat = loadtxt("data/Eloss_Lambda_T--1e2.dat")
 Bg = np.sqrt(3*Lsolar/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', label=r'$n=1$, $\beta_m=10^2$')
+dat = loadtxt("data/Eloss_Lambda--1e2.dat")
+Bg = np.sqrt(3*Lsolar/100/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls=':')
 
 dat = loadtxt("data/Eloss_Lambda_T--1e4.dat")
 Bg = np.sqrt(3*Lsolar/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', label=r'$n=1$, $\beta_m=10^4$')
+dat = loadtxt("data/Eloss_Lambda--1e4.dat")
+Bg = np.sqrt(3*Lsolar/100/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls=':')
 
 dat = loadtxt("data/Eloss_Lambda_T--1e6.dat")
 Bg = np.sqrt(3*Lsolar/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-', label=r'$n=1$, $\beta_m=10^6$')
+dat = loadtxt("data/Eloss_Lambda--1e6.dat")
+Bg = np.sqrt(3*Lsolar/100/dat[:,1])
+ax2.plot(dat[:,0],Bg, ls=':')
 
 ax2.hlines(Bg[-1],dat[0,0],dat[-1,0],color='k')
 
