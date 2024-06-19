@@ -65,7 +65,9 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-plt.savefig('plots/casimirplot_Bm--fill--reduced--2.pdf')
+name = "casimirplot_Bm--fill--reduced--2"
+plt.savefig('plots/{}.jpg'.format(name))
+plt.savefig('plots/pdfs/{}.pdf'.format(name))
 plt.show()
 
 

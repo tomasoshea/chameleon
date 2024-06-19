@@ -122,5 +122,7 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-plt.savefig('plots/spectrum_TB.pdf')
+name = "spectrum_TB"
+plt.savefig('plots/{}.jpg'.format(name))
+plt.savefig('plots/pdfs/{}.pdf'.format(name))
 plt.show()
