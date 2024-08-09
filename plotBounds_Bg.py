@@ -27,8 +27,8 @@ plt.style.use("style.txt")	# import plot style
 fig, (ax1,ax2) = plt.subplots(1, 2)	# display is 1920 x 1080 (16:9)
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 #ax2 = fig2.add_axes((.1,.1,.8,.8))
-ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e12))
-ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e12))
+ax1.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
+ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e11))
 
 
 ########################################
@@ -36,15 +36,30 @@ ax2.set(xlim=(1e0, 1e4), ylim=(1e8, 1e12))
 ########################################
 
 # add CAST
-ax1.hlines(5.74e10, 1e0, 1e11, color='black', ls='-', label='CAST')
-ax1.text(2e0,7e10,"CAST (2019)")
+ax1.hlines(5.74e10, 1e0, 1e11, color='black', ls=':', label='CAST')
+ax1.text(2e0,3.3e10,"CAST (2019)")
 
 dat = loadtxt("data/Eloss_Bm_T.dat")
 #dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
 Bg = sqrt(Lsolar*3/100/dat[:,1])
-print(Bg)
+#print(Bg)
 ax1.plot(dat[:,0],Bg, ls='-', color='r',label='This work')
-ax1.text(2e0,4e9,"This work")
+ax1.text(2e0,6e9,"This work")
+
+#dat = loadtxt("data/CAST_new_totalflux.dat")
+##dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
+#Bg = power(dat[:,1]/castbkg, -1/4)
+#print(Bg)
+#ax1.plot(dat[:,0],Bg, ls=':', color='k',label='CAST new (estimate)')
+#ax1.text(2e0,6.5e8,"CAST (new)")
+
+#dat = loadtxt("data/CAST_Brax_totalflux.dat")
+#dat = loadtxt("data/primakoff_total_Eloss_tach.dat")
+#Bg = power(dat[:,1]/castbkg, -1/4)
+#ax1.plot(dat[:,0],Bg, ls=':', color='b',label='CAST old (Brax)')
+#ax1.text(2e0,4e9,"This work")
+
+
 
 # add other limits
 ax1.add_patch( Rectangle( (2e1, 1e-3), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )
@@ -72,7 +87,7 @@ Bg = sqrt(Lsolar*3/100/dat[:,1])
 ax2.plot(dat[:,0],Bg, ls='-',color='r', label='This work')
 
 # add CAST
-ax2.hlines(5.74e10, 1e0, 1e11, color='black', ls='-', label='CAST')
+ax2.hlines(5.74e10, 1e0, 1e11, color='black', ls=':', label='CAST')
 
 # add other limits
 ax2.add_patch( Rectangle( (1e1, 1e-10), -1e11, 1e12, color='r', alpha=0.4, label='Torsion balance') )

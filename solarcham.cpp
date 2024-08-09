@@ -292,7 +292,7 @@ double B_integrand( int c, double Bm, double w ) {
 // units Bg-2
 double B_solarIntg( double w, double Bm ) {
 	double total = 0;
-	for( int c = 0; c < r.size() - 1; c++ ) {
+	for( int c = 0; c < r.size() - 2; c++ ) {
 		// tachoclining
 		if(tachoclining) {
 			if(r[c]/rSolar < r1/rSolar-0.05) { continue; }
@@ -484,12 +484,44 @@ void CAST_old() {
 	tachoclining = true;		// only look in tachocline
 	for( double Bm = 1e-1; Bm <= 1e8; Bm*=10 ) {
 		double total = 0;
+
 		for( double w = Emin; w < Emax; w+=dw ){
 			total += 0.5*dw*P*(B_solarIntg(w+dw,Bm)+B_solarIntg(w,Bm));
 		}
 		beta.push_back(Bm);
 		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));	// eV3 keV-1
-		cout << "Bm = " << Bm << " of 1e18" << endl;
+		cout << "Bm = " << Bm << " of 1e8" << endl;
+	}
+	// write to file
+	string name = "data/"+model+"_totalflux.dat";
+	write2D( name, beta, flux );
+}
+
+
+// get new estimated CAST bound
+// input detector params
+// units eV3/keV
+void CAST_new() {
+	vector<double> beta, flux;
+	string model = "CAST_new";
+	n = 1;
+	E = 2.4e-3;
+	double Emin = 1e3;
+	double Emax = 2e4;
+	double B_cast = 9*T2eV;		// CAST B-field [eV2]
+	double L_cast = 9.26/m2eV;	// CAST length [eV-1]
+	double P = pow(B_cast*L_cast/2/Mpl, 2);	// back conversion prob for low m
+	double dw = 1e1;
+	double w1, w2, r1, r2 = 0;
+	tachoclining = true;		// only look in tachocline
+	for( double Bm = 1e-1; Bm <= 1e8; Bm*=10 ) {
+		double total = 0;
+		for( double w = Emin; w < Emax; w+=dw ){
+			total += 0.5*dw*P*(T_solarIntg(w+dw,Bm)+T_solarIntg(w,Bm));
+		}
+		beta.push_back(Bm);
+		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));	// eV3 keV-1
+		cout << "Bm = " << Bm << " of 1e8" << endl;
 	}
 	// write to file
 	string name = "data/"+model+"_totalflux.dat";
@@ -564,14 +596,14 @@ void CAST_Brax() {
 	double P = pow(B_cast*L_cast/2/Mpl, 2);
 	double dw = 1e1;
 	double w1, w2, r1, r2 = 0;
-	for( double Bm = 1e-1; Bm <= 1e12; Bm*=10 ) {
+	for( double Bm = 1e-1; Bm <= 1e8; Bm*=10 ) {
 		double total = 0;
 		for( double w = Emin; w < Emax; w+=dw ){
 			total += 0.5*dw*P*(solarIntgBrax(w+dw,Bm)+solarIntgBrax(w,Bm));
 		}
 		beta.push_back(Bm);
 		flux.push_back(total/4/pi/dSolar/dSolar / ((Emax-Emin)/1e3));
-		cout << "Bm = " << Bm << " of 1e18" << endl;
+		cout << "Bm = " << Bm << " of 1e8" << endl;
 	}
 	// write to file
 	string name = "data/"+model+"_totalflux.dat";
@@ -1085,14 +1117,16 @@ void spectrum_ll_omega() {
 
 int main() { 
 	// convert Gaunt factor Theta to T in eV
-	//for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
-	//for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
+	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
+	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
 	//spectrum('B');
 	//spectrumL();
 	//profile('B');
-	Eloss_Lambda();
+	//Eloss_Lambda();
 	//spectrum_ll();
+	CAST_new();
+	//CAST_Brax();
 	return 0;
 }
 
