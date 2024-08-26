@@ -1,6 +1,6 @@
 # Tom O'Shea 2023
 
-# plot scalar primakoff spectrum
+# plot flux for various Lambda
 
 from numpy import loadtxt
 from matplotlib import pyplot as plt

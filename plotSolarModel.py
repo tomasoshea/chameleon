@@ -1,4 +1,5 @@
-# comparing different contributions for babyIAXO
+#Tom O'Shea 2024
+# plot solar model
 
 import numpy as np
 from numpy import loadtxt

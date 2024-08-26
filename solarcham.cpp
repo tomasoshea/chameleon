@@ -1,7 +1,6 @@
 // Tom O'Shea 2024
 
 // Primakoff production of scalars in the sun
-// V3 - the one using full ee scatter with full disp. rel. but no Raffelt screening=
 
 #include "utils.h"
 
@@ -1120,13 +1119,7 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
-	//spectrum('B');
-	//spectrumL();
-	//profile('B');
-	//Eloss_Lambda();
-	//spectrum_ll();
-	CAST_new();
-	//CAST_Brax();
+	spectrum('T');
 	return 0;
 }
 

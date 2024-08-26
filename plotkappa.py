@@ -1,6 +1,6 @@
 # Tom O'Shea 2023
 
-# plot scalar primakoff spectrum
+# plot Debye screening scale
 
 from numpy import loadtxt
 from matplotlib import pyplot as plt

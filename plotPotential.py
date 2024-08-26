@@ -1,6 +1,6 @@
 # Tom O'Shea 2023
 
-# plot scalar primakoff spectrum
+# plot chameleon potential
 
 from numpy import loadtxt
 from matplotlib import pyplot as plt
@@ -40,5 +40,7 @@ ax2.set_yticks([])
 #ax2.legend()
 
 plt.tight_layout()
-#plt.savefig('plots/potential--nolabel.jpg')
+name = "potential--nolabel"
+plt.savefig('plots/{}.jpg'.format(name))
+plt.savefig('plots/pdfs/{}.pdf'.format(name))
 plt.show()

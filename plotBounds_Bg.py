@@ -1,5 +1,5 @@
-# Tom O'Shea 2023
-# plot IAXO chameleon-photon coupling limits
+# Tom O'Shea 2024
+# plot solar chameleon energy loss bound
 
 from numpy import *
 from matplotlib import pyplot as plt

@@ -1,6 +1,6 @@
-# Tom O'Shea 2023
+# Tom O'Shea 2024
 
-# plot scalar primakoff spectrum
+# plot Bm limits against n
 
 from numpy import loadtxt
 from matplotlib import pyplot as plt
