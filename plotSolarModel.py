@@ -1,4 +1,5 @@
 #Tom O'Shea 2024
+
 # plot solar model
 
 import numpy as np
@@ -10,31 +11,31 @@ plt.style.use("style.txt")	# import plot style
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
 ax2 = fig2.subplots()
-#ax2.set(xlim=(1e-2,1.01), ylim=(1e-3,1.01))
-ax2.set(xlim=(0,1), ylim=(0,3.05e3))
+ax2.set(xlim=(1e-2,1.01), ylim=(1e-3,1.01))
+#ax2.set(xlim=(0,1), ylim=(0,3.05e3))
 
 
 # radius (fraction)
 r = loadtxt("data/rFrac.dat")
 
 # plasma freq
-#dat = loadtxt("data/wp.dat")
-#dat = dat / np.nanmax(dat)
-#ax2.plot(r,dat, label='Plasma frequency', ls='--')
+dat = loadtxt("data/wp.dat")
+dat = dat / np.nanmax(dat)
+ax2.plot(r,dat, label='Plasma frequency', ls='--')
 
 # density
-#dat = loadtxt("data/rho.dat")
-#dat = dat / np.nanmax(dat)
-#ax2.plot(r,dat, label='Density', ls='--')
-#
-## temperature
-#dat = loadtxt("data/T.dat")
-#dat = dat / np.nanmax(dat)
-#ax2.plot(r,dat,label="Temperature",ls=':')
+dat = loadtxt("data/rho.dat")
+dat = dat / np.nanmax(dat)
+ax2.plot(r,dat, label='Density', ls='--')
+
+# temperature
+dat = loadtxt("data/T.dat")
+dat = dat / np.nanmax(dat)
+ax2.plot(r,dat,label="Temperature",ls=':')
 
 # B-field
 dat = loadtxt("data/Bfields-R.dat")
-#dat[:,1] = dat[:,1] / np.nanmax(dat[:,1])
+dat[:,1] = dat[:,1] / np.nanmax(dat[:,1])
 ax2.plot(dat[:,0],dat[:,1],label="Magnetic field strength",ls='-')
 
 
@@ -72,5 +73,8 @@ ax2.set_ylabel("B-field strength [T]")
 #ax2.legend()
 
 plt.tight_layout()
-#plt.savefig('plots/solarmodel-lin.jpg')
+name = "solarmodel-lin"
+plt.savefig('plots/{}.jpg'.format(name))
+plt.savefig('plots/pdfs/{}.pdf'.format(name))
+plt.show()
 plt.show()

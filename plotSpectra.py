@@ -1,4 +1,4 @@
-# Tom O'Shea 2023
+# Tom O'Shea 2024
 
 # plot scalar primakoff spectrum
 
@@ -11,7 +11,6 @@ plt.style.use("style.txt")	# import plot style
 
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
-#ax2 = fig2.add_axes((.15,.15,.8,.8))
 ax2 = fig2.subplots()
 #ax2.set(xlim=(1e-3,2e1), ylim=(1e-4, 9e5))
 ax2.set(xlim=(1e-2,2e1), ylim=(1e14, 1e22))
@@ -30,89 +29,18 @@ T2eV = 2e-16 * 1e18#		// Tesla to eV2 conversion [eV2/T]
 # Electron/Ion T
 dat = loadtxt("data/T_spectrum_1e2.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-',color='k')
 ax2.text(3e0,4e20,"T")
 
 # B-field
 dat = loadtxt("data/B_spectrum_1e2.dat")
 dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat[:,0]/1e3,dat[:,1],color='orange', ls='--')
+ax2.plot(dat[:,0]/1e3,dat[:,1],color='k', ls='--')
 ax2.text(2e-2,6e16,"B")
 dat2 = loadtxt("data/B_spectrum_1e2--lowB.dat")
 dat2[:,1] = dat2[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='orange', ls='--')
-plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='orange', alpha=0.3)
-
-## LL
-##dat = loadtxt("data/LLspectrum_tot.dat")
-#dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
-#dat[:,1] = dat[:,1]*1e3/s2eV/4/np.pi/np.pi	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
-
-"""
-# LL coalescence & L-primakoff 
-datL = loadtxt("data/L_spectrum_1e2--test.dat")
-wpmax = np.max(datL[:,0])
-
-dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
-for i in range(len(dat[:,0])):
-	if dat[i,0] < wpmax:
-		dat[i,1] = np.nan
-	else:
-		dat[i,1] = dat[i,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="L-L coalescence")
-#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls='-',color='r')
-
-dat = datL
-dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-for i in range(len(dat[:,0])):
-	if dat[i,0] > 288: dat[i,0] = np.nan
-ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-', color='r', label="L")
-#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],color='r')
-ax2.text(2e-2,1e22,"L")
-"""
-
-#dat = loadtxt("data/L_spectrum_1e2.dat")
-#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-')
-#ax2.text(2e-2,1e22,"L")
-
-#dat = loadtxt("data/L_spectrum_1e2--omega_unbounded.dat")
-#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L unbounded')
-
-#dat = loadtxt("data/L_spectrum_1e2--omega_bounded1.dat")
-#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L bounded (kD)')
-
-#dat = loadtxt("data/L_spectrum_1e2--omega_kD.dat")
-#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls='-.', label='L bounded (kD)')
-
-
-#datL = loadtxt("data/L_spectrum_1e2--omega_kD.dat")
-#wpmax = np.max(datL[:,0])
-#wpmax = 275
-#dat = loadtxt("data/coalescence_ll_spectrum_1e2--test.dat")
-#for i in range(len(dat[:,0])):
-#	if dat[i,0] < wpmax:
-#		dat[i,1] = np.nan
-#	else:
-#		dat[i,1] = dat[i,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L-L coalescence")
-#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],ls=':',color='r')
-#
-#dat = datL
-#dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
-#for i in range(len(dat[:,0])):
-#	if dat[i,0] > wpmax: dat[i,0] = np.nan
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', color='r', label="L")
-#ax2.text(2e-2,4e18,"L")
-#plt.vlines(dat[-1,0]/1e3,1e-5,dat[-1,1],color='r')
-
-#dat = loadtxt("data/coalescence_lt_spectrum_1e2--uncapped.dat")
-#ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':', label="L-T coalescence")
-
+ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='k', ls='--')
+plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='k', alpha=0.2)#, hatch='xx'
 
 # axes
 ax2.set_xlabel("Scalar energy [keV]")
@@ -122,7 +50,7 @@ ax2.set_yscale('log')
 #ax2.legend(loc='lower right')
 
 plt.tight_layout()
-name = "spectrum_TB"
+name = "spectrum_TB--black"
 plt.savefig('plots/{}.jpg'.format(name))
 plt.savefig('plots/pdfs/{}.pdf'.format(name))
 plt.show()

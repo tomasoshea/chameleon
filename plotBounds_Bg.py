@@ -1,4 +1,5 @@
 # Tom O'Shea 2024
+
 # plot solar chameleon energy loss bound
 
 from numpy import *

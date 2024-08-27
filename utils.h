@@ -1,3 +1,7 @@
+// Tom O'Shea 2024
+
+// utilities to load datafiles etc.
+
 #include <iostream>
 #include <fstream>
 #include <vector>

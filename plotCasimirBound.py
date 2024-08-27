@@ -15,7 +15,6 @@ nticks=100
 
 # setup plot
 fig2 = plt.figure(1)	# display is 1920 x 1080 (16:9)
-#ax2 = fig2.add_axes((.15,.15,.8,.8))
 ax2 = fig2.subplots()
 #ax2.set(xlim=(1e-1,1e18), ylim=(1e-8, 1e1))
 ax2.set(xlim=(1e-1,1e7), ylim=(1e-7, 1e-1))

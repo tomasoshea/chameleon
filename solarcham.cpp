@@ -8,7 +8,7 @@ using namespace std;
 
 
 // solar parameters
-double B0 = 3e3*T2eV;	//200*T2eV;						// radiative zone max B [eV2]
+double B0 = 3e3*T2eV;							// radiative zone max B [eV2]  200*T2eV;
 double B1 = 50*T2eV;							// tachocline max B [eV2]  4*T2eV;//
 double B2 = 3*T2eV;								// outer region max B [eV2]  3*T2eV;//
 double r0 = 0.712*rSolar;						// [eV-1]
@@ -41,11 +41,11 @@ bool tachoclining = false;						// for CAST comparison
 
 
 
-// chameleon mass as a function of solar radius and model parameters
+// chameleon mass squared as a function of solar radius and model parameters
 // cham model params n (phi-n potential), Bm (matter coupling)
 // assume rho dominated by matter density
+// units eV2
 double mCham2( int c, double Bm ) {
-	//if(n==0) { cout<<"ERROR! n = 0"<<endl; return 0; }
 	double E4n = pow(E,4+n);
 	if(n<0) { return n*(n+1)*E4n*pow( pow( Bm*rho[c]/(n*Mpl*E4n), (n+2) ) , 1/(n+1) ); }
 	else { return n*(n+1)*E4n* pow( Bm*rho[c]/(n*Mpl*E4n), (n+2)/(n+1) ); }
@@ -66,16 +66,6 @@ double curlyI( double u, double v ) {
 // I(u,v) in u=>1 limit
 double curlyIapprox( double u, double v ) {		// for u->1
 	return u*u/v - (v+2)*log(v/(v+2)) - 2;
-}
-
-
-// similarly solved integral to I(u,v) for for L-case
-// D(y,u,v) in the text but only one of u or y is needed
-double curlyD( double y, double v) {
-	double u = 1/(2*y) + y/2;
-	return pow(u-y,2)/v *log((u+1)/(u-1))
-			- pow(u+v-y,2)/v*log((u+v+1)/(u+v-1))
-			+ 2;
 }
 
 
@@ -104,30 +94,6 @@ double T_integrand( int c, double Bm, double w ) {
 }
 
 
-// differential scalar production rate on earth d2N/dr/dk divided by beta_gamma^2
-// pure longitudinal component only
-// units eV Bg-2
-double L_integrand( int c, double Bm, double kgamma ) {
-	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
-	//double w = wp[c];						// omega is plasma freq [eV]
-	double w = sqrt( pow(wp[c],2) + 3*T[c]*kgamma*kgamma/me );	// corrected omega [eV]
-	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
-	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
-	if( w*w <= ms2 ) { return 0; }
-	double K2 = 8*pi*alpha*nbar[c]/T[c];		// Debye screening scale ^2 [eV2]
-	//double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
-	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
-	double yArg = kgamma/kphi;				// y for curlyD
-	double vArg = K2/(2*kphi*kgamma);		// v for curlyD
-	double Dyuv = curlyD(yArg,vArg);
-
-	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * T[c]
-			* kphi * Dyuv;		// [eV Bg-2]
-	// MODIFIED
-	//return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * kphi
-	//		* pow(w,3/2) * Dyuv / (exp(w/T[c]) - 1);
-}
-
 // integral over solar volume, for a given scalar mass and energy
 // returns dN/dw Bg-2
 // units Bg-2
@@ -138,64 +104,6 @@ double T_solarIntg( double w, double Bm ) {
 	}
 	return total;		// [Bg-2]
 }
-
-// integral over k_gamma for l-plasmon
-// integrate from 0 to kappa
-/// units eV2 Bg-2
-double kIntg( double Bm, int c ) {
-	double total = 0;
-	double kD = sqrt(8*pi*alpha*nbar[c]/T[c]);
-	//double kD = sqrt(8*pi*alpha*nbar[c]/me);
-	double kmax = kD/10;
-	double dk = kmax/1000;
-	for( double k = dk; k < kmax; k+= dk ) {
-		//cout << k << endl;
-		total += 0.5 * dk * (L_integrand(c, Bm, k+dk) + L_integrand(c, Bm, k));
-	}
-	
-	return total;
-}
-
-// MODIFIED
-// differential scalar production rate on earth d2N/dr/dw divided by beta_gamma^2
-// AS ABOVE BUT IN w NOT K
-// units eV Bg-2
-double L_integrand_omega( int c, double Bm, double w ) {
-	double Tc = T[c];
-	if( Tc==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
-	double wpc = wp[c];
-	if(w<wpc) { return 0; }
-	//double w = wp[c];						// omega is plasma freq [eV]
-	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
-	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
-	if( w*w <= ms2 ) { return 0; }
-	double K2 = 4*pi*alpha*nbar[c]/Tc;		// Debye screening scale ^2 [eV2]
-	double kD = sqrt(4*pi*alpha*ne[c]/Tc);
-	//double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
-	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
-	double kgamma = sqrt( me/3/Tc * (w*w - wpc*wpc) );	// kL from corrected omega [eV]
-	if( kgamma > sqrt(K2)/10 ) { return 0; }
-	double yArg = kgamma/kphi;				// y for curlyD
-	double vArg = K2/(2*kphi*kgamma);		// v for curlyD
-	double Dyuv = curlyD(yArg,vArg);
-	//if( kgamma == 0 ) { Dyuv = 0;}//32*kgamma*kgamma/3/(kphi*kphi + K2); }
-	//cout << "kgamma = "<<kgamma<<endl; 
-	//cout<<kgamma<<endl;
-	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar2[c] * me/3/Tc
-			* kphi *w*w/(exp(w/Tc) - 1) * Dyuv/kgamma;		// [eV Bg-2]
-}
-
-// integral over solar volume, for a given scalar mass and energy
-// returns dN/dw Bg-2
-// units Bg-2
-double L_solarIntg( double w, double Bm ) {
-	double total = 0;
-	for( int c = 0; c < r.size() - 1; c++ ) {
-		total += 0.5 * (r[c+1] - r[c]) * (L_integrand_omega(c+1, Bm, w) + L_integrand_omega(c, Bm, w));
-	}
-	return total;		// [Bg-2]
-}
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -653,27 +561,6 @@ double T_integrand_B( int c, double Bm, double w ) {
 }
 
 
-// differential scalar production rate on earth d2N/dr/dk divided by beta_gamma^2
-// pure longitudinal component only
-// units eV Bg-2
-double L_integrand_B( int c, double Bm, double kgamma ) {
-	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
-	double w = wp[c];						// omega is plasma freq
-	double ms2 = mCham2_B(c,Bm);				// chameleon mass2 [eV2]
-	//double ms2 = Bm*Bm;					// fixed scalar mass2 [eV2]
-	if( w*w <= ms2 ) { return 0; }
-	double K2 = 8*pi*alpha*nbar[c]/T[c];		// Debye screening scale ^2 [eV2]
-	//double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
-	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
-	double yArg = kgamma/kphi;				// y for curlyD
-	double vArg = K2/(2*kphi*kgamma);		// v for curlyD
-	double Dyuv = curlyD(yArg,vArg);
-
-	return alpha/(4*Mpl*Mpl*pi) * pow(r[c], 2) * nbar[c] * T[c]
-			* kphi * Dyuv;		// [eV Bg-2]
-}
-
-
 // integral over solar volume, for a given scalar mass and energy
 // returns dN/dw Bg-2
 // units Bg-2
@@ -684,22 +571,6 @@ double T_solarIntg_B( double w, double Bm ) {
 	}
 	return total;		// [Bg-2]
 }
-
-
-// integral over k_gamma for l-plasmon
-// integrate from 0 to kappa
-/// units eV2 Bg-2
-double kIntg_B( double Bm, int c ) {
-	double total = 0;
-	double kD = sqrt(8*pi*alpha*nbar[c]/T[c]);
-	double dk = kD/1000;
-	for( double k = dk; k < kD; k+= dk ) {
-		//cout << k << endl;
-		total += 0.5 * dk * (L_integrand_B(c, Bm, k+dk) + L_integrand_B(c, Bm, k));
-	}
-	return total;
-}
-
 
 
 
@@ -720,20 +591,13 @@ void profile( char option ) {
 	n = 1;					// cham model n
 	double dw = 1e0;
 	for( int c = 0; c < r.size(); c++ ) {
-		if (option=='L') {
-			radius.push_back(r[c]);
-			rate.push_back( kIntg(Bm, c) );
+		double total = 0;
+		for( double w = dw; w < 2e4; w+=dw ){
+			if(option=='T') { total += 0.5*dw*( T_integrand(c,Bm,w+dw) + T_integrand(c,Bm,w) ); }
+			if(option=='B') { total += 0.5*dw*( B_integrand(c,Bm,w+dw) + B_integrand(c,Bm,w) ); }
 		}
-		else{
-			double total = 0;
-			for( double w = dw; w < 2e4; w+=dw ){
-				if(option=='T') { total += 0.5*dw*( T_integrand(c,Bm,w+dw) + T_integrand(c,Bm,w) ); }
-				if(option=='B') { total += 0.5*dw*( B_integrand(c,Bm,w+dw) + B_integrand(c,Bm,w) ); }
-			}
-			radius.push_back(r[c]);
-			rate.push_back(total);
-		}
-
+		radius.push_back(r[c]);
+		rate.push_back(total);
 	}
 	// write to file
 	if (option=='T') { name = "data/T_profile_1e2.dat"; }
@@ -752,90 +616,23 @@ void spectrum( char option ) {
 	string name;
 	Bm = 1e2;		// cham matter coupling
 	n = 1;					// cham model n
-	if (option=='L') {
-		double w1, w2 = 0;
-		double r1, r2 = rSolar;
-		for( int j = wp.size()-1; j >=0; j-- ){
-			w1 = wp[j];
-			if(w2 > w1) { continue; }
-			else{
-			r1 = r[j];
-			energy.push_back(w1);
-			count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) );
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-	}
-	else{
-		double dw = 1e0;
-		for( double w = dw; w < 2e4; w+=dw ){
-			energy.push_back(w);					// eV
-			if (option=='T') { count.push_back( T_solarIntg(w,Bm) );	}	// Bg-2
-			else if (option=='B') { count.push_back( B_solarIntg(w,Bm) );	}	// Bg-2
-			if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-		}
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
+		energy.push_back(w);					// eV
+		if (option=='T') { count.push_back( T_solarIntg(w,Bm) );	}	// Bg-2
+		else if (option=='B') { count.push_back( B_solarIntg(w,Bm) );	}	// Bg-2
+		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 	}
 	// write to file
 	if (option=='T') { name = "data/T_spectrum_1e2.dat"; }
-	else if (option=='L') { name = "data/L_spectrum_1e2--test3.dat"; }
 	else if (option=='B') { name = "data/B_spectrum_1e2.dat"; }
 	
 	write2D( name , energy, count );
 }
 
-// as above for L-w case
-void spectrumL() {
-	vector<double> count, energy;
-	string name;
-	Bm = 1e2;		// cham matter coupling
-	n = 1;					// cham model n
-	double dw = 1e0;
-	for( double w = dw; w < 2e4; w+=dw ){
-		energy.push_back(w);					// eV
-		count.push_back( L_solarIntg(w,Bm) );	// Bg-2
-		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-	}
-	name = "data/L_spectrum_1e2--omega_kD.dat";
-	write2D( name , energy, count );	
-}
-
-
-// calculate differential particle flux spectrum dN/dw by intg over solar volume
-// units Bg-2
-// total L+T spectrum
-void total_spectrum() {
-	vector<double> count, energy;
-	string name;
-	Bm = 1e2;				// cham matter coupling
-	n = 1;					// cham model n
-	double w1, w2 = 0;
-	double r1, r2 = rSolar;
-	for( int j = wp.size()-1; j >=0; j-- ){
-		w1 = wp[j];
-		if(w2 > w1) { continue; }
-		else{
-		r1 = r[j];
-		energy.push_back(w1);
-		count.push_back( kIntg(Bm, j) * abs((r2-r1)/(w2-w1))
-						+ T_solarIntg(w1,Bm) );
-		r2 = r[j];
-		w2 = wp[j];
-		}
-	}
-	double dw = 1e0;
-	for( double w = w2; w < 2e4; w+=dw ){
-		energy.push_back(w);					// eV
-		count.push_back( T_solarIntg(w,Bm) );	// Bg-2
-		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
-	}
-	// write to file
-	name = "data/total_spectrum_1e2.dat";
-	write2D( name , energy, count );
-}
 
 // calculate total energy loss rate as a function of Bm
-// both L and T
+// only T - dominant contribution
 // units eV2 Bm-2
 void Eloss() {
 	vector<double> mass;
@@ -844,27 +641,21 @@ void Eloss() {
 	n = 1;
 	for( double Bm = 1e-1; Bm <= 1e4; Bm*=10 ) {
 		double total = 0;
-		for( int j = wp.size()-1; j > 0; j-- ){
-			total += 0.5*abs(r[j]-r[j-1])*( wp[j]*kIntg(Bm,j) + wp[j-1]*kIntg(Bm,j-1) )
-					+ 0.5*abs(wp[j]-wp[j-1])*(wp[j]*T_solarIntg(wp[j],Bm) + wp[j-1]*T_solarIntg(wp[j-1],Bm));
-			//total += 0.5*(w1-w2)*(w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm));	// only T
-			//total += 0.5*abs(r[j]-r[j-1])*( wp[j]*kIntg(Bm,j) + wp[j-1]*kIntg(Bm,j-1) );	// only L
-		}
-		for( double w = wp[0]; w < 2e4; w+=dw ){
+		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*T_solarIntg(w+dw,Bm) + w*T_solarIntg(w,Bm) );
+						// + (w+dw)*T_solarIntg(w+dw,Bm) + w*T_solarIntg(w,Bm) );
 		}
 		mass.push_back(Bm);
 		Q.push_back(total);
 		cout<<"Bm = "<<Bm<<endl;
 	}
 	// write to file
-	string name = "data/Eloss_Bm_TL.dat";
+	string name = "data/Eloss_Bm_T.dat";
 	write2D( name , mass, Q );
 }
 
 
 // calculate total energy loss rate as a function of Bg
-// both L and T
 // units eV2 Bm-2
 void Eloss_Bg() {
 	vector<double> mass;
@@ -873,20 +664,9 @@ void Eloss_Bg() {
 	n = 1;
 	double Bm = 1e2;
 	double w1, w2, r1, r2 = 0;
-	for( double Bg = 1e0; Bg <= 1e100; Bg*=10 ) {
+	for( double Bg = 1e-1; Bm <= 1e20; Bm*=10 ) {
 		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg_B(Bg, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*T_solarIntg_B(w1,Bg) + w2*T_solarIntg_B(w2,Bg) );
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
+		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*T_solarIntg_B(w+dw,Bg) + w*T_solarIntg_B(w,Bg) );
 		}
 		mass.push_back(Bg);
@@ -911,19 +691,7 @@ void Eloss_n() {
 	while ( n <= 100 ) {
 		if( (n<0) && ((int)n%2 != 0) ) { continue; }
 		double total = 0;
-		for( int j = wp.size()-1; j >= 0; j-- ){
-			w1 = wp[j];
-			if(w2 >= w1) { continue; }
-			else{
-			r1 = r[j];
-			total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-								 + w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm) );
-			if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
-			r2 = r[j];
-			w2 = wp[j];
-			}
-		}
-		for( double w = w1+dw; w < 2e4; w+=dw ){
+		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*T_solarIntg(w+dw,Bm) + w*T_solarIntg(w,Bm) );
 			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
 		}
@@ -952,18 +720,6 @@ void Eloss_Lambda() {
 	while ( E <= 1e1 ) {
 		//if( (n<0) && ((int)n%2 != 0) ) { continue; }
 		double total = 0;
-		//for( int j = wp.size()-1; j >= 0; j-- ){
-		//	w1 = wp[j];
-		//	if(w2 >= w1) { continue; }
-		//	else{
-		//	r1 = r[j];
-		//	total += 0.5*(w1-w2)*( (w1+w2)*( kIntg(Bm, j) * abs((r2-r1)/(w2-w1)) )
-		//						 + w1*T_solarIntg(w1,Bm) + w2*T_solarIntg(w2,Bm) );
-		//	if(isnan(total)) {cout<<"Bm = "<<Bm<<"	w = "<<w1<<"	j = "<<j<<endl;}
-		//	r2 = r[j];
-		//	w2 = wp[j];
-		//	}
-		//}
 		for( double w = dw; w < 2e4; w+=dw ){
 			total += 0.5*dw*( (w+dw)*T_solarIntg(w+dw,Bm) + w*T_solarIntg(w,Bm) );
 			//if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }

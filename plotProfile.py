@@ -1,4 +1,4 @@
-# Tom O'Shea 2023
+# Tom O'Shea 2024
 
 # plot scalar primakoff profile
 
@@ -21,10 +21,6 @@ ax2.set(xlim=(0,1), ylim=(5e-17, 1e-7))
 dat = loadtxt("data/T_profile_1e2.dat")
 #dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
 ax2.plot(dat[:,0]/R,dat[:,1], ls='--',label='T')
-
-#dat = loadtxt("data/L_profile_1e2.dat")
-##dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
-#ax2.plot(dat[:,0]/R,dat[:,1], ls=':',label='L')
 
 dat = loadtxt("data/B_profile_1e2.dat")
 #dat[:,1] = dat[:,1]/np.nanmax(dat[:,1])
