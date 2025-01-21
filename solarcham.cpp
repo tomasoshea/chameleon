@@ -106,6 +106,64 @@ double T_solarIntg( double w, double Bm ) {
 }
 
 
+// differential scalar production rate on earth d2N/dr/dw divided by beta_gamma^2
+// transverse case, for line-of-sight ring integral
+// units eV Bg-2
+double T_integrand_ring( int c, double Bm, double w ) {
+	if( T[c]==0 ) { return 0; }				// solves weird behaviour when ne = T = 0
+	double mg2 = 4*pi*alpha*ne[c]/me;		// assume mg2 = wp2
+	double ms2 = mCham2(c,Bm);				// chameleon mass2 [eV2]
+	//cout<<ms2<<endl;
+	//double ms2 = Bm*Bm;						// fixed scalar mass2 [eV2]
+	if( w*w <= mg2 ) { return 0; }
+	if( w*w <= ms2 ) { return 0; }
+	double K2 = 8*pi*alpha*nbar[c]/T[c];		// Debye screening scale ^2 [eV2]
+	double kgamma = sqrt(w*w - mg2);		// photon momentum [eV]
+	double kphi = sqrt(w*w - ms2);			// scalar momentum [eV]
+	double uArg = kgamma/(2*kphi) + kphi/(2*kgamma);	// u for curlyI
+	double vArg = K2/(2*kphi*kgamma);		// v for curlyI
+	double Iuv = curlyI(uArg,vArg);
+	// explicitally put in the u=>1 limit to avoid badnesses in the code
+	if(uArg < 1.01) { Iuv = curlyIapprox(uArg,vArg); }
+
+	return alpha/(8*Mpl*Mpl*pi) * nbar[c]/(exp(w/T[c]) - 1)
+			* w*w * kphi/kgamma * Iuv;		// [eV Bg-2]
+}
+
+
+// integral over solar volume, for a line-of-sight ring
+// returns dN/dw Bg-2
+// ring inner and outer radii given as fraction of solar radius
+// units Bg-2
+double T_solarIntg_ring( double w, double Bm, double x ) {
+	if ( r[r.size()-1] < x ) { return 0; }
+	double total = 0;
+	int count = 0;
+	for( int c = 0; c < r.size() - 3; c++ ) {
+		if( r[c] < x ) { count = c; continue; }
+		total += 0.5 * ( sqrt(pow(r[c+1],2) - x*x) * (T_integrand_ring(c+2, Bm, w) - T_integrand_ring(c+1, Bm, w))
+											+ sqrt(pow(r[c],2) - x*x) * (T_integrand_ring(c+1, Bm, w) - T_integrand_ring(c, Bm, w)) );
+	}
+	//cout << "count = "<<count<<"	r[count+1] = "<<r[count+1]<<"	x = "<<x<<endl;
+	double boundary = sqrt(pow(r[r.size()-1],2) - x*x) * T_integrand_ring(r.size()-1, Bm, w);
+	//cout << boundary - total << endl;
+	return boundary - total;		// [Bg-2]
+}
+
+
+double T_solarIntg_x( double w, double Bm, double rmin, double rmax ) {
+	double xmin = rmin*rSolar;
+	double xmax = rmax*rSolar;
+	double total = 0;
+	double dx = 0.01*rSolar;
+	for( double x = xmin; x < xmax; x += dx ) {
+		total += 0.5 * (dx) * ( (x+dx)*T_solarIntg_ring(w,Bm,x+dx) + x*T_solarIntg_ring(w,Bm,x) );
+	}
+	if( total < 0 ) { cout<<total<<endl; return 0; }
+	return total;		// [Bg-2]
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// MAGNETIC FIELD PRODUCTION /////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -630,6 +688,25 @@ void spectrum( char option ) {
 	write2D( name , energy, count );
 }
 
+// calculate differential particle flux spectrum dN/dw by intg over solar volume, for line-of-sight ring
+// units Bg-2
+// (dN is really dN/dt, sorry)
+void spectrum_ring( ) {
+	vector<double> count, energy;
+	string name;
+	Bm = 1e2;		// cham matter coupling
+	n = 1;					// cham model n
+	double dw = 1e0;
+	for( double w = dw; w < 2e4; w+=dw ){
+		energy.push_back(w);					// eV
+		count.push_back( T_solarIntg_x(w,Bm,0.5,1.0) );	// Bg-2
+		if((int)(w) % (int)(1e3) == 0) { cout<<"w = "<<w/1e3<<"keV of 20keV"<<endl; }
+	}
+	// write to file
+	name = "data/T_spectrum_ring_5to10.dat";	
+	write2D( name , energy, count );
+}
+
 
 // calculate total energy loss rate as a function of Bm
 // only T - dominant contribution
@@ -875,7 +952,8 @@ int main() {
 	for( int i = 1; i < 201; i++ ) { z1[0][i] = z1[0][i] * me; }
 	for( int i = 1; i < 201; i++ ) { z2[0][i] = z2[0][i] * me; }
 
-	spectrum('T');
+	//spectrum('T');
+	spectrum_ring();
 	return 0;
 }
 

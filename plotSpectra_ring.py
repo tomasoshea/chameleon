@@ -43,15 +43,32 @@ ax2.plot(dat2[:,0]/1e3,dat2[:,1],color='k', ls='--')
 plt.fill_between(dat2[:,0]/1e3,dat2[:,1],dat[:,1], facecolor='k', alpha=0.2)#, hatch='xx'
 
 
+# Electron/Ion T (ring)
+dat = loadtxt("data/T_spectrum_ring_full.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':',color='y', label='0 - 1 R')
+
+dat = loadtxt("data/T_spectrum_ring_0to1.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--',color='m',label='0 - 0.1 R')
+
+dat = loadtxt("data/T_spectrum_ring_0to5.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls='--',color='b',label='0 - 0.5 R')
+
+dat = loadtxt("data/T_spectrum_ring_9to10.dat")
+dat[:,1] = dat[:,1]*1e3/s2eV	# convert [eV/eV] to [s-1 keV-1]
+ax2.plot(dat[:,0]/1e3,dat[:,1], ls=':',color='r',label='0.9 - 1.0 R')
+
 # axes
 ax2.set_xlabel("Scalar energy [keV]")
 ax2.set_ylabel(r'$\beta_\gamma^{-2}\; \frac{\mathrm{d}\dot{N}}{\mathrm{d}\omega}$ [s$^{-1}$ ke2V$^{-1}$]')	#[m-2 s-1 eV-1]")
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-#ax2.legend(loc='lower right')
+ax2.legend(loc='lower right')
 
 plt.tight_layout()
-name = "spectrum_TB--black"
+name = "spectrum_rings"
 plt.savefig('plots/{}.jpg'.format(name))
 plt.savefig('plots/pdfs/{}.pdf'.format(name))
 plt.show()
